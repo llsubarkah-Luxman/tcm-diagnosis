@@ -12,37 +12,53 @@
         h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
         .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; }
         
-        /* Tambahan CSS untuk Kotak Panduan */
+        /* Kotak Panduan */
         .alert-box { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem; }
         .alert-box ul { margin: 0.5rem 0 0 0; padding-left: 1.2rem; }
         .alert-box li { margin-bottom: 0.3rem; }
         
-        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        /* Tombol & Layout Opsi */
+        .opsi-input { display: flex; flex-direction: column; gap: 15px; background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px; margin-right: 5px; }
         button:hover { background: #2980b9; }
-        img { max-width: 100%; margin-top: 1rem; border-radius: 4px; max-height: 300px; object-fit: cover; }
+        .btn-secondary { background: #2ecc71; }
+        .btn-secondary:hover { background: #27ae60; }
+        
+        img, canvas { max-width: 100%; margin-top: 1rem; border-radius: 4px; object-fit: cover; }
     </style>
 </head>
 <body>
 
     <h2>Sistem Diagnostik Lidah TCM</h2>
-    <p>Unggah foto lidah klien untuk analisis otomatis.</p>
+    <p>Unggah foto atau gunakan WebCam untuk analisis otomatis.</p>
     
-    <!-- Tambahan Kotak Panduan Fotografi -->
     <div class="alert-box">
         <strong>⚠️ Panduan Foto Lidah yang Benar:</strong>
         <ul>
-            <li><strong>Pencahayaan:</strong> Gunakan cahaya terang (sebaiknya menghadap cahaya matahari/jendela). Hindari foto yang gelap atau berbayang.</li>
-            <li><strong>Fokus:</strong> Pastikan HANYA area lidah dan bibir yang masuk ke dalam bingkai foto.</li>
-            <li><strong>Tanpa Gangguan:</strong> Jangan ada jari, tangan, atau objek lain di dekat wajah saat difoto.</li>
-            <li><strong>Posisi:</strong> Julurkan lidah secara rileks, jangan terlalu tegang.</li>
+            <li><strong>Wajib Kamera Belakang/Utama:</strong> Gunakan kamera utama HP atau Webcam Eksternal. JANGAN gunakan kamera selfie agar warna dan tekstur lidah tidak dimanipulasi oleh filter.</li>
+            <li><strong>Pencahayaan:</strong> Gunakan cahaya terang alami (menghadap jendela). Hindari area berbayang.</li>
+            <li><strong>Fokus:</strong> Pastikan HANYA area lidah dan bibir yang masuk ke dalam bingkai.</li>
         </ul>
     </div>
     
-    <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
-    <br>
+    <div class="opsi-input">
+        <div>
+            <strong>Opsi 1: Dari HP / File Komputer</strong><br><br>
+            <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
+        </div>
+        <hr style="width: 100%; border: 0; border-top: 1px solid #bdc3c7;">
+        <div>
+            <strong>Opsi 2: Dari Kamera Laptop (Webcam)</strong><br>
+            <button class="btn-secondary" id="btnWebcam" onclick="startWebcam()">🎥 Buka Webcam</button>
+        </div>
+    </div>
+
+    <!-- Area Pratinjau -->
+    <div id="webcam-container"></div>
     <img id="imagePreview" style="display:none;">
-    <br><br>
-    <button id="btnPrediksi" onclick="predict()" style="display:none;">Analisis Sindrom</button>
+    
+    <button id="btnPrediksi" onclick="predictImage()" style="display:none;">Analisis Gambar</button>
+    <button id="btnCapture" class="btn-secondary" onclick="predictWebcam()" style="display:none;">📸 Jepret & Analisis Webcam</button>
 
     <div id="hasilPanel" class="card" style="display:none;">
         <h3 id="teksDiagnosis" style="color: #e74c3c;">Diagnosis: -</h3>
@@ -51,8 +67,8 @@
     </div>
 
     <script>
-        const URL = "./"; // Lokasi folder model 
-        let model, maxPredictions;
+        const URL = "./"; 
+        let model, webcam, maxPredictions;
 
         async function init() {
             const modelURL = URL + "model.json";
@@ -65,24 +81,76 @@
             }
         }
 
+        // --- Fungsi Opsi 1 (File/Kamera HP) ---
         function previewImage(event) {
+            if(webcam) stopWebcam(); // Matikan webcam jika sedang menyala
+            
             const reader = new FileReader();
             reader.onload = function(){
                 const img = document.getElementById('imagePreview');
                 img.src = reader.result;
                 img.style.display = 'block';
                 document.getElementById('btnPrediksi').style.display = 'inline-block';
+                document.getElementById('btnCapture').style.display = 'none';
                 document.getElementById('hasilPanel').style.display = 'none';
             }
             reader.readAsDataURL(event.target.files[0]);
         }
 
-        async function predict() {
-            if(!model) return alert("Sistem AI sedang memuat, harap tunggu sebentar.");
-            
+        async function predictImage() {
+            if(!model) return alert("Sistem AI sedang memuat, harap tunggu.");
             const img = document.getElementById('imagePreview');
             const prediction = await model.predict(img);
+            prosesHasil(prediction);
+        }
+
+        // --- Fungsi Opsi 2 (Webcam Laptop) ---
+        async function startWebcam() {
+            if(!model) return alert("Sistem AI sedang memuat, harap tunggu.");
             
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('btnPrediksi').style.display = 'none';
+            document.getElementById('hasilPanel').style.display = 'none';
+            
+            const flip = false; // Mode klinis (tidak terbalik seperti cermin)
+            webcam = new tmImage.Webcam(300, 300, flip); 
+            await webcam.setup(); 
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            document.getElementById("webcam-container").innerHTML = "";
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            
+            document.getElementById("btnWebcam").innerText = "Tutup Webcam";
+            document.getElementById("btnWebcam").setAttribute("onclick", "stopWebcam()");
+            document.getElementById("btnCapture").style.display = "inline-block";
+        }
+
+        async function loop() {
+            if(webcam) {
+                webcam.update(); 
+                window.requestAnimationFrame(loop);
+            }
+        }
+
+        function stopWebcam() {
+            if(webcam) {
+                webcam.stop();
+                document.getElementById("webcam-container").innerHTML = "";
+                document.getElementById("btnWebcam").innerText = "🎥 Buka Webcam";
+                document.getElementById("btnWebcam").setAttribute("onclick", "startWebcam()");
+                document.getElementById("btnCapture").style.display = "none";
+            }
+        }
+
+        async function predictWebcam() {
+            if(!model || !webcam) return;
+            const prediction = await model.predict(webcam.canvas);
+            prosesHasil(prediction);
+        }
+
+        // --- Mesin Rekomendasi Terpadu ---
+        function prosesHasil(prediction) {
             let highestProb = 0;
             let diagnosis = "";
             for (let i = 0; i < maxPredictions; i++) {
@@ -91,10 +159,7 @@
                     diagnosis = prediction[i].className;
                 }
             }
-            tampilkanRekomendasi(diagnosis);
-        }
-
-        function tampilkanRekomendasi(diagnosis) {
+            
             let titik = "";
             let jamu = "";
 
