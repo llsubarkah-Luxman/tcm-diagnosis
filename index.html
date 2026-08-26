@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostik Lidah TCM</title>
+    <!-- Memuat Library TensorFlow.js & Teachable Machine via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; color: #333; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
+        .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        button:hover { background: #2980b9; }
+        img { max-width: 100%; margin-top: 1rem; border-radius: 4px; max-height: 300px; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+    <h2>Sistem Diagnostik Lidah TCM</h2>
+    <p>Unggah foto lidah klien untuk analisis otomatis.</p>
+    
+    <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
+    <br>
+    <img id="imagePreview" style="display:none;">
+    <br><br>
+    <button id="btnPrediksi" onclick="predict()" style="display:none;">Analisis Sindrom</button>
+
+    <div id="hasilPanel" class="card" style="display:none;">
+        <h3 id="teksDiagnosis" style="color: #e74c3c;">Diagnosis: -</h3>
+        <p><strong>Titik Akupunktur:</strong> <span id="teksAkupunktur">-</span></p>
+        <p><strong>Formula Herbal (500mg):</strong> <span id="teksJamu">-</span></p>
+    </div>
+
+    <script>
+        const URL = "./"; // Lokasi folder model (satu direktori dengan index.html)
+        let model, maxPredictions;
+
+        // 1. Inisialisasi model saat halaman dimuat
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+            
+            try {
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+                console.log("Model AI berhasil dimuat ke browser!");
+            } catch (e) {
+                console.error("Gagal memuat model. Pastikan dijalankan via Local Server.", e);
+            }
+        }
+
+        // 2. Pratinjau gambar yang diunggah
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const img = document.getElementById('imagePreview');
+                img.src = reader.result;
+                img.style.display = 'block';
+                document.getElementById('btnPrediksi').style.display = 'inline-block';
+                document.getElementById('hasilPanel').style.display = 'none';
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // 3. Proses Prediksi TensorFlow
+        async function predict() {
+            if(!model) return alert("Sistem AI sedang memuat atau gagal dijalankan.");
+            
+            const img = document.getElementById('imagePreview');
+            const prediction = await model.predict(img);
+            
+            let highestProb = 0;
+            let diagnosis = "";
+            for (let i = 0; i < maxPredictions; i++) {
+                if (prediction[i].probability > highestProb) {
+                    highestProb = prediction[i].probability;
+                    diagnosis = prediction[i].className;
+                }
+            }
+            
+            tampilkanRekomendasi(diagnosis);
+        }
+
+        // 4. Mesin Rekomendasi Klinis TCM
+        function tampilkanRekomendasi(diagnosis) {
+            let titik = "";
+            let jamu = "";
+
+            if (diagnosis === "Panas") {
+                titik = "Ling Gu (22.05), Da Bai (22.04) - insersi kontralateral terhadap area keluhan utama.";
+                jamu = "200mg Sambiloto, 150mg Alang-alang, 150mg Temulawak (Dosis: 2x2 kapsul/hari).";
+            } else if (diagnosis === "Dingin_Lembap") {
+                titik = "Sima (88.17, 88.18, 88.19) dan Tong Shen (88.09).";
+                jamu = "250mg Jahe Merah, 150mg Kunyit, 100mg Kayu Manis (Dosis: 2x2 kapsul/hari).";
+            } else if (diagnosis === "Stagnasi") {
+                titik = "Huo Ying (33.04), Huo Zhu (33.05) disertai teknik bleeding pada titik ashi/area stasis.";
+                jamu = "200mg Temu Ireng, 200mg Kunyit Putih, 100mg Pegagan (Dosis: 2x2 kapsul/hari).";
+            } else {
+                titik = "Zu San Li (ST36) untuk pemeliharaan Qi dan Darah secara umum.";
+                jamu = "300mg Temulawak, 200mg Meniran (Dosis: 1x1 kapsul/hari).";
+            }
+
+            document.getElementById('teksDiagnosis').innerText = "Sindrom Lidah Terdeteksi: " + diagnosis;
+            document.getElementById('teksAkupunktur').innerText = titik;
+            document.getElementById('teksJamu').innerText = jamu;
+            document.getElementById('hasilPanel').style.display = 'block';
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
