@@ -1,1 +1,1 @@
-{"tfjsVersion":"1.7.4","tmVersion":"2.4.14","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2026-08-25T23:04:32.027Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["Normal","Panas","Dingin_Lembap","Stagnasi"],"imageSize":224}
+{"tfjsVersion":"1.7.4","tmVersion":"2.4.14","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2026-08-26T03:58:22.978Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["Panas","Normal","Stagnasi","Dingin_Lembap","Bukan_Lidah"],"imageSize":224}
