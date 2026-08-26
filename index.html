@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagnostik Lidah TCM</title>
+    <title>Sistem Diagnostik Lidah TCM</title>
     <!-- Memuat Library TensorFlow.js & Teachable Machine via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
@@ -12,195 +12,201 @@
         h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
         .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; }
         
-        /* Tambahan CSS untuk Kotak Panduan */
+        /* Kotak Panduan */
         .alert-box { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem; }
         .alert-box ul { margin: 0.5rem 0 0 0; padding-left: 1.2rem; }
         .alert-box li { margin-bottom: 0.3rem; }
         
-        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        /* Tombol & Layout Opsi */
+        .opsi-input { display: flex; flex-direction: column; gap: 15px; background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px; margin-right: 5px; }
         button:hover { background: #2980b9; }
-        img { max-width: 100%; margin-top: 1rem; border-radius: 4px; max-height: 300px; object-fit: cover; }
+        .btn-secondary { background: #2ecc71; }
+        .btn-secondary:hover { background: #27ae60; }
+        
+        img, canvas { max-width: 100%; margin-top: 1rem; border-radius: 4px; object-fit: cover; }
     </style>
 </head>
 <body>
 
     <h2>Sistem Diagnostik Lidah TCM</h2>
-    <p>Unggah foto lidah klien untuk analisis otomatis.</p>
+    <p>Unggah foto atau gunakan WebCam untuk analisis otomatis.</p>
     
-    <!-- Tambahan Kotak Panduan Fotografi -->
     <div class="alert-box">
         <strong>⚠️ Panduan Foto Lidah yang Benar:</strong>
         <ul>
-            <li><strong>Pencahayaan:</strong> Gunakan cahaya terang (sebaiknya menghadap cahaya matahari/jendela). Hindari foto yang gelap atau berbayang.</li>
+            <li><strong>Wajib Kamera Belakang/Utama:</strong> Gunakan kamera utama HP atau Webcam. JANGAN gunakan kamera selfie (depan) agar warna dan tekstur lidah tidak dimanipulasi oleh filter otomatis.</li>
+            <li><strong>Pencahayaan:</strong> Gunakan cahaya terang alami (menghadap jendela). Hindari area berbayang.</li>
             <li><strong>Fokus:</strong> Pastikan HANYA area lidah dan bibir yang masuk ke dalam bingkai foto.</li>
-            <li><strong>Tanpa Gangguan:</strong> Jangan ada jari, tangan, atau objek lain di dekat wajah saat difoto.</li>
-            <li><strong>Posisi:</strong> Julurkan lidah secara rileks, jangan terlalu tegang.</li>
         </ul>
     </div>
     
-    <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
-    <br>
+    <div class="opsi-input">
+        <div>
+            <strong>Opsi 1: Dari HP / File Komputer</strong><br><br>
+            <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
+        </div>
+        <hr style="width: 100%; border: 0; border-top: 1px solid #bdc3c7;">
+        <div>
+            <strong>Opsi 2: Dari Kamera Laptop (Webcam)</strong><br>
+            <button class="btn-secondary" id="btnWebcam" onclick="startWebcam()">🎥 Buka Webcam</button>
+        </div>
+    </div>
+
+    <!-- Area Pratinjau -->
+    <div id="webcam-container"></div>
     <img id="imagePreview" style="display:none;">
-    <br><br>
-    <button id="btnPrediksi" onclick="predict()" style="display:none;">Analisis Sindrom</button>
+    
+    <!-- Perbaikan fungsi pada tombol di bawah ini -->
+    <button id="btnPrediksi" onclick="predictImage()" style="display:none;">Analisis Gambar</button>
+    <button id="btnCapture" class="btn-secondary" onclick="predictWebcam()" style="display:none;">📸 Jepret & Analisis Webcam</button>
 
     <div id="hasilPanel" class="card" style="display:none;">
         <h3 id="teksDiagnosis" style="color: #e74c3c;">Diagnosis: -</h3>
+        <p id="teksPenjelasan" style="font-style: italic; margin-bottom: 15px; color: #555;"></p>
         <p><strong>Titik Akupunktur:</strong> <span id="teksAkupunktur">-</span></p>
         <p><strong>Formula Herbal (500mg):</strong> <span id="teksJamu">-</span></p>
     </div>
 
     <script>
-    const URL = "./"; 
-    let model, webcam, maxPredictions;
+        const URL = "./"; 
+        let model, webcam, maxPredictions;
 
-    async function init() {
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
-        try {
-            model = await tmImage.load(modelURL, metadataURL);
-            maxPredictions = model.getTotalClasses();
-        } catch (e) {
-            console.error("Gagal memuat model.", e);
-        }
-    }
-
-    // --- Fungsi Opsi 1 (File/Kamera HP) ---
-    function previewImage(event) {
-        if(webcam) stopWebcam();
-        
-        const reader = new FileReader();
-        reader.onload = function(){
-            const img = document.getElementById('imagePreview');
-            img.src = reader.result;
-            img.style.display = 'block';
-            document.getElementById('btnPrediksi').style.display = 'inline-block';
-            document.getElementById('btnCapture').style.display = 'none';
-            document.getElementById('hasilPanel').style.display = 'none';
-        }
-        reader.readAsDataURL(event.target.files[0]);
-    }
-
-    async function predictImage() {
-        if(!model) return alert("Sistem AI sedang memuat, harap tunggu.");
-        const img = document.getElementById('imagePreview');
-        const prediction = await model.predict(img);
-        prosesHasil(prediction);
-    }
-
-    // --- Fungsi Opsi 2 (Webcam Laptop) ---
-    async function startWebcam() {
-        if(!model) return alert("Sistem AI sedang memuat, harap tunggu.");
-        
-        document.getElementById('imagePreview').style.display = 'none';
-        document.getElementById('btnPrediksi').style.display = 'none';
-        document.getElementById('hasilPanel').style.display = 'none';
-        
-        const flip = false; 
-        webcam = new tmImage.Webcam(300, 300, flip); 
-        await webcam.setup(); 
-        await webcam.play();
-        window.requestAnimationFrame(loop);
-
-        document.getElementById("webcam-container").innerHTML = "";
-        document.getElementById("webcam-container").appendChild(webcam.canvas);
-        
-        document.getElementById("btnWebcam").innerText = "Tutup Webcam";
-        document.getElementById("btnWebcam").setAttribute("onclick", "stopWebcam()");
-        document.getElementById("btnCapture").style.display = "inline-block";
-    }
-
-    async function loop() {
-        if(webcam) {
-            webcam.update(); 
-            window.requestAnimationFrame(loop);
-        }
-    }
-
-    function stopWebcam() {
-        if(webcam) {
-            webcam.stop();
-            document.getElementById("webcam-container").innerHTML = "";
-            document.getElementById("btnWebcam").innerText = "🎥 Buka Webcam";
-            document.getElementById("btnWebcam").setAttribute("onclick", "startWebcam()");
-            document.getElementById("btnCapture").style.display = "none";
-        }
-    }
-
-    async function predictWebcam() {
-        if(!model || !webcam) return;
-        const prediction = await model.predict(webcam.canvas);
-        prosesHasil(prediction);
-    }
-
-    // --- Mesin Rekomendasi Terpadu ---
-    function prosesHasil(prediction) {
-        let highestProb = 0;
-        let diagnosis = "";
-        for (let i = 0; i < maxPredictions; i++) {
-            if (prediction[i].probability > highestProb) {
-                highestProb = prediction[i].probability;
-                diagnosis = prediction[i].className;
+        // Inisialisasi Model AI
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+            try {
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+            } catch (e) {
+                console.error("Gagal memuat model.", e);
             }
         }
-        
-        let judul = "";
-        let warna = "#e74c3c"; // Merah default
-        let penjelasan = "";
-        let titik = "";
-        let jamu = "";
 
-        // Logika Anti-Jebakan
-        if (diagnosis === "Bukan_Lidah") {
-            judul = "⚠️ Sistem Tidak Menemukan Lidah";
-            warna = "#f39c12"; // Oranye peringatan
-            penjelasan = "Kamera mendeteksi wajah atau objek lain, namun tidak melihat lidah yang menjulur. Harap ikuti panduan foto, julurkan lidah Anda, dan coba ambil gambar kembali.";
-            titik = "-";
-            jamu = "-";
-        } else if (diagnosis === "Panas") {
-            judul = "Sindrom Terdeteksi: Panas";
-            penjelasan = "Tubuh Anda saat ini sedang menyimpan kelebihan energi panas. Biasanya kondisi ini membuat Anda mudah merasa haus, gerah, emosi sedikit lebih reaktif, atau tidur terasa kurang nyenyak. Mari kita sejukkan kembali sistem tubuh Anda.";
-            titik = "Ling Gu (22.05), Da Bai (22.04) - insersi kontralateral.";
-            jamu = "200mg Sambiloto, 150mg Alang-alang, 150mg Temulawak (Dosis: 2x2 kapsul/hari).";
-        } else if (diagnosis === "Dingin_Lembap") {
-            judul = "Sindrom Terdeteksi: Dingin & Lembap";
-            penjelasan = "Sistem pencernaan Anda sedang kelelahan dan membutuhkan kehangatan ekstra. Tubuh cenderung menumpuk cairan yang tidak terproses, sehingga sering kali membuat badan terasa berat, mudah lelah, atau buang air besar kurang padat.";
-            titik = "Sima (88.17, 88.18, 88.19) dan Tong Shen (88.09).";
-            jamu = "250mg Jahe Merah, 150mg Kunyit, 100mg Kayu Manis (Dosis: 2x2 kapsul/hari).";
-        } else if (diagnosis === "Stagnasi") {
-            judul = "Sindrom Terdeteksi: Stagnasi (Sirkulasi Terhambat)";
-            penjelasan = "Ada aliran energi atau sirkulasi darah yang kurang lancar di dalam tubuh Anda. Kondisi ini sering kali bermanifestasi sebagai rasa pegal yang menetap, ketegangan otot, atau nyeri di area tertentu. Kita perlu mengurai sumbatan ini agar tubuh kembali ringan.";
-            titik = "Huo Ying (33.04), Huo Zhu (33.05) disertai teknik bleeding pada titik ashi.";
-            jamu = "200mg Temu Ireng, 200mg Kunyit Putih, 100mg Pegagan (Dosis: 2x2 kapsul/hari).";
-        } else {
-            judul = "Kondisi Terdeteksi: Normal / Stabil";
-            warna = "#27ae60"; // Hijau
-            penjelasan = "Kabar baik! Kondisi lidah Anda secara umum menunjukkan keseimbangan yang sangat baik. Mari pertahankan dengan pola makan bergizi, kelola pikiran agar tetap rileks, dan istirahat yang cukup.";
-            titik = "Zu San Li (ST36) untuk pemeliharaan Qi dan Darah secara umum.";
-            jamu = "300mg Temulawak, 200mg Meniran (Dosis: 1x1 kapsul/hari).";
+        // --- Fungsi Opsi 1 (File/Kamera HP) ---
+        function previewImage(event) {
+            if(webcam) stopWebcam();
+            
+            const reader = new FileReader();
+            reader.onload = function(){
+                const img = document.getElementById('imagePreview');
+                img.src = reader.result;
+                img.style.display = 'block';
+                document.getElementById('btnPrediksi').style.display = 'inline-block';
+                document.getElementById('btnCapture').style.display = 'none';
+                document.getElementById('hasilPanel').style.display = 'none';
+            }
+            reader.readAsDataURL(event.target.files[0]);
         }
 
-        // Menampilkan ke HTML
-        document.getElementById('teksDiagnosis').innerText = judul;
-        document.getElementById('teksDiagnosis').style.color = warna;
-        
-        // Memastikan elemen penjelasan ada (jika belum ada di HTML sebelumnya)
-        let elemenPenjelasan = document.getElementById('teksPenjelasan');
-        if(!elemenPenjelasan) {
-            elemenPenjelasan = document.createElement('p');
-            elemenPenjelasan.id = 'teksPenjelasan';
-            elemenPenjelasan.style.fontStyle = 'italic';
-            elemenPenjelasan.style.marginBottom = '15px';
-            document.getElementById('teksDiagnosis').after(elemenPenjelasan);
+        async function predictImage() {
+            if(!model) return alert("Sistem AI sedang memuat, harap tunggu sebentar.");
+            const img = document.getElementById('imagePreview');
+            const prediction = await model.predict(img);
+            prosesHasil(prediction);
         }
-        elemenPenjelasan.innerText = penjelasan;
 
-        document.getElementById('teksAkupunktur').innerText = titik;
-        document.getElementById('teksJamu').innerText = jamu;
-        document.getElementById('hasilPanel').style.display = 'block';
-    }
+        // --- Fungsi Opsi 2 (Webcam Laptop) ---
+        async function startWebcam() {
+            if(!model) return alert("Sistem AI sedang memuat, harap tunggu sebentar.");
+            
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('btnPrediksi').style.display = 'none';
+            document.getElementById('hasilPanel').style.display = 'none';
+            
+            const flip = false; 
+            webcam = new tmImage.Webcam(300, 300, flip); 
+            await webcam.setup(); 
+            await webcam.play();
+            window.requestAnimationFrame(loop);
 
-    window.onload = init;
-	</script>
+            document.getElementById("webcam-container").innerHTML = "";
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            
+            document.getElementById("btnWebcam").innerText = "Tutup Webcam";
+            document.getElementById("btnWebcam").setAttribute("onclick", "stopWebcam()");
+            document.getElementById("btnCapture").style.display = "inline-block";
+        }
+
+        async function loop() {
+            if(webcam) {
+                webcam.update(); 
+                window.requestAnimationFrame(loop);
+            }
+        }
+
+        function stopWebcam() {
+            if(webcam) {
+                webcam.stop();
+                document.getElementById("webcam-container").innerHTML = "";
+                document.getElementById("btnWebcam").innerText = "🎥 Buka Webcam";
+                document.getElementById("btnWebcam").setAttribute("onclick", "startWebcam()");
+                document.getElementById("btnCapture").style.display = "none";
+            }
+        }
+
+        async function predictWebcam() {
+            if(!model || !webcam) return;
+            const prediction = await model.predict(webcam.canvas);
+            prosesHasil(prediction);
+        }
+
+        // --- Mesin Rekomendasi Terpadu ---
+        function prosesHasil(prediction) {
+            let highestProb = 0;
+            let diagnosis = "";
+            for (let i = 0; i < maxPredictions; i++) {
+                if (prediction[i].probability > highestProb) {
+                    highestProb = prediction[i].probability;
+                    diagnosis = prediction[i].className;
+                }
+            }
+            
+            let judul = "";
+            let warna = "#e74c3c"; // Default merah
+            let penjelasan = "";
+            let titik = "";
+            let jamu = "";
+
+            if (diagnosis === "Bukan_Lidah") {
+                judul = "⚠️ Sistem Tidak Menemukan Lidah";
+                warna = "#f39c12"; // Oranye
+                penjelasan = "Kamera mendeteksi wajah atau objek lain, namun tidak melihat lidah yang menjulur. Harap ikuti panduan foto, julurkan lidah Anda, dan coba ambil gambar kembali.";
+                titik = "-";
+                jamu = "-";
+            } else if (diagnosis === "Panas") {
+                judul = "Sindrom Terdeteksi: Panas";
+                penjelasan = "Tubuh Anda saat ini sedang menyimpan kelebihan energi panas. Biasanya kondisi ini membuat Anda mudah merasa haus, gerah, emosi sedikit lebih reaktif, atau tidur terasa kurang nyenyak. Mari kita sejukkan kembali sistem tubuh Anda.";
+                titik = "Ling Gu (22.05), Da Bai (22.04) - insersi kontralateral.";
+                jamu = "200mg Sambiloto, 150mg Alang-alang, 150mg Temulawak (Dosis: 2x2 kapsul/hari).";
+            } else if (diagnosis === "Dingin_Lembap") {
+                judul = "Sindrom Terdeteksi: Dingin & Lembap";
+                penjelasan = "Sistem pencernaan Anda sedang kelelahan dan membutuhkan kehangatan ekstra. Tubuh cenderung menumpuk cairan yang tidak terproses, sehingga sering kali membuat badan terasa berat, mudah lelah, atau buang air besar kurang padat.";
+                titik = "Sima (88.17, 88.18, 88.19) dan Tong Shen (88.09).";
+                jamu = "250mg Jahe Merah, 150mg Kunyit, 100mg Kayu Manis (Dosis: 2x2 kapsul/hari).";
+            } else if (diagnosis === "Stagnasi") {
+                judul = "Sindrom Terdeteksi: Stagnasi (Sirkulasi Terhambat)";
+                penjelasan = "Ada aliran energi atau sirkulasi darah yang kurang lancar di dalam tubuh Anda. Kondisi ini sering kali bermanifestasi sebagai rasa pegal yang menetap, ketegangan otot, atau nyeri di area tertentu. Kita perlu mengurai sumbatan ini agar tubuh kembali ringan.";
+                titik = "Huo Ying (33.04), Huo Zhu (33.05) disertai teknik bleeding pada titik ashi.";
+                jamu = "200mg Temu Ireng, 200mg Kunyit Putih, 100mg Pegagan (Dosis: 2x2 kapsul/hari).";
+            } else {
+                judul = "Kondisi Terdeteksi: Normal / Stabil";
+                warna = "#27ae60"; // Hijau
+                penjelasan = "Kabar baik! Kondisi lidah Anda secara umum menunjukkan keseimbangan yang sangat baik. Mari pertahankan dengan pola makan bergizi, kelola pikiran agar tetap rileks, dan istirahat yang cukup.";
+                titik = "Zu San Li (ST36) untuk pemeliharaan Qi dan Darah secara umum.";
+                jamu = "300mg Temulawak, 200mg Meniran (Dosis: 1x1 kapsul/hari).";
+            }
+
+            document.getElementById('teksDiagnosis').innerText = judul;
+            document.getElementById('teksDiagnosis').style.color = warna;
+            document.getElementById('teksPenjelasan').innerText = penjelasan;
+            document.getElementById('teksAkupunktur').innerText = titik;
+            document.getElementById('teksJamu').innerText = jamu;
+            document.getElementById('hasilPanel').style.display = 'block';
+        }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
