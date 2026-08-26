@@ -11,6 +11,12 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; color: #333; }
         h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
         .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; }
+        
+        /* Tambahan CSS untuk Kotak Panduan */
+        .alert-box { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .alert-box ul { margin: 0.5rem 0 0 0; padding-left: 1.2rem; }
+        .alert-box li { margin-bottom: 0.3rem; }
+        
         button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
         button:hover { background: #2980b9; }
         img { max-width: 100%; margin-top: 1rem; border-radius: 4px; max-height: 300px; object-fit: cover; }
@@ -20,6 +26,17 @@
 
     <h2>Sistem Diagnostik Lidah TCM</h2>
     <p>Unggah foto lidah klien untuk analisis otomatis.</p>
+    
+    <!-- Tambahan Kotak Panduan Fotografi -->
+    <div class="alert-box">
+        <strong>⚠️ Panduan Foto Lidah yang Benar:</strong>
+        <ul>
+            <li><strong>Pencahayaan:</strong> Gunakan cahaya terang (sebaiknya menghadap cahaya matahari/jendela). Hindari foto yang gelap atau berbayang.</li>
+            <li><strong>Fokus:</strong> Pastikan HANYA area lidah dan bibir yang masuk ke dalam bingkai foto.</li>
+            <li><strong>Tanpa Gangguan:</strong> Jangan ada jari, tangan, atau objek lain di dekat wajah saat difoto.</li>
+            <li><strong>Posisi:</strong> Julurkan lidah secara rileks, jangan terlalu tegang.</li>
+        </ul>
+    </div>
     
     <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
     <br>
@@ -34,24 +51,20 @@
     </div>
 
     <script>
-        const URL = "./"; // Lokasi folder model (satu direktori dengan index.html)
+        const URL = "./"; // Lokasi folder model 
         let model, maxPredictions;
 
-        // 1. Inisialisasi model saat halaman dimuat
         async function init() {
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
-            
             try {
                 model = await tmImage.load(modelURL, metadataURL);
                 maxPredictions = model.getTotalClasses();
-                console.log("Model AI berhasil dimuat ke browser!");
             } catch (e) {
-                console.error("Gagal memuat model. Pastikan dijalankan via Local Server.", e);
+                console.error("Gagal memuat model.", e);
             }
         }
 
-        // 2. Pratinjau gambar yang diunggah
         function previewImage(event) {
             const reader = new FileReader();
             reader.onload = function(){
@@ -64,9 +77,8 @@
             reader.readAsDataURL(event.target.files[0]);
         }
 
-        // 3. Proses Prediksi TensorFlow
         async function predict() {
-            if(!model) return alert("Sistem AI sedang memuat atau gagal dijalankan.");
+            if(!model) return alert("Sistem AI sedang memuat, harap tunggu sebentar.");
             
             const img = document.getElementById('imagePreview');
             const prediction = await model.predict(img);
@@ -79,11 +91,9 @@
                     diagnosis = prediction[i].className;
                 }
             }
-            
             tampilkanRekomendasi(diagnosis);
         }
 
-        // 4. Mesin Rekomendasi Klinis TCM
         function tampilkanRekomendasi(diagnosis) {
             let titik = "";
             let jamu = "";
