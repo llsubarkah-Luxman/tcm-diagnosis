@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Diagnostik Lidah TCM</title>
+    <!-- Memuat Library AI -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <!-- Memuat Library Pemotong Gambar (Cropper.js) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; color: #333; }
         h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
@@ -13,51 +18,59 @@
         
         .alert-box { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem; }
         .alert-box ul { margin: 0.5rem 0 0 0; padding-left: 1.2rem; }
-        .alert-box li { margin-bottom: 0.3rem; }
         
         .opsi-input { display: flex; flex-direction: column; gap: 15px; background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px; margin-right: 5px; }
         button:hover { background: #2980b9; }
         .btn-secondary { background: #2ecc71; }
         .btn-secondary:hover { background: #27ae60; }
+        .btn-warning { background: #e67e22; width: 100%; margin-top: 15px; }
+        .btn-warning:hover { background: #d35400; }
         
-        img, canvas { max-width: 100%; margin-top: 1rem; border-radius: 4px; object-fit: cover; }
+        /* Area Cropper */
+        .img-container { max-width: 100%; max-height: 400px; margin-top: 15px; display: none; }
+        img { max-width: 100%; }
+        #webcam-container canvas { border-radius: 4px; max-width: 100%; }
         
-        /* Gaya untuk form input rekam medis */
         input[type="text"] { width: 100%; padding: 10px; margin-top: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
     </style>
 </head>
 <body>
 
     <h2>Sistem Diagnostik Lidah TCM</h2>
-    <p>Unggah foto atau gunakan WebCam untuk analisis otomatis.</p>
+    <p>Unggah foto atau gunakan WebCam, potong area lidah, dan biarkan AI menganalisis.</p>
     
     <div class="alert-box">
-        <strong>⚠️ Panduan Foto Lidah yang Benar:</strong>
+        <strong>💡 Panduan Penggunaan:</strong>
         <ul>
-            <li><strong>Wajib Kamera Belakang/Utama:</strong> Gunakan kamera utama HP atau Webcam. JANGAN gunakan kamera selfie (depan) agar warna dan tekstur lidah tidak dimanipulasi oleh filter otomatis.</li>
-            <li><strong>Pencahayaan:</strong> Gunakan cahaya terang alami (menghadap jendela). Hindari area berbayang.</li>
-            <li><strong>Fokus:</strong> Pastikan HANYA area lidah dan bibir yang masuk ke dalam bingkai foto.</li>
+            <li>Ambil gambar menggunakan kamera (bebas jarak).</li>
+            <li><strong>Geser kotak seleksi</strong> agar HANYA menyorot area lidah.</li>
+            <li>Klik tombol Analisis.</li>
         </ul>
     </div>
     
     <div class="opsi-input">
         <div>
             <strong>Opsi 1: Dari HP / File Komputer</strong><br><br>
-            <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
+            <input type="file" id="imageUpload" accept="image/*" onchange="previewForCrop(event)">
         </div>
         <hr style="width: 100%; border: 0; border-top: 1px solid #bdc3c7;">
         <div>
             <strong>Opsi 2: Dari Kamera Laptop (Webcam)</strong><br>
             <button class="btn-secondary" id="btnWebcam" onclick="startWebcam()">🎥 Buka Webcam</button>
+            <button class="btn-secondary" id="btnCapture" onclick="captureWebcamForCrop()" style="display:none;">📸 Jepret Gambar</button>
         </div>
     </div>
 
+    <!-- Area Pratinjau Webcam -->
     <div id="webcam-container"></div>
-    <img id="imagePreview" style="display:none;">
     
-    <button id="btnPrediksi" onclick="predictImage()" style="display:none;">Analisis Gambar</button>
-    <button id="btnCapture" class="btn-secondary" onclick="predictWebcam()" style="display:none;">📸 Jepret & Analisis Webcam</button>
+    <!-- Area Pemotongan (Crop) -->
+    <div class="img-container" id="cropContainer">
+        <img id="imageToCrop" src="">
+    </div>
+    
+    <button id="btnPrediksi" class="btn-warning" onclick="predictCroppedImage()" style="display:none;">🔍 Analisis Area Terpilih</button>
 
     <div id="hasilPanel" class="card" style="display:none;">
         <h3 id="teksDiagnosis" style="color: #e74c3c;">Diagnosis: -</h3>
@@ -65,7 +78,6 @@
         <p><strong>Titik Akupunktur:</strong> <span id="teksAkupunktur">-</span></p>
         <p><strong>Formula Herbal (500mg):</strong> <span id="teksJamu">-</span></p>
         
-        <!-- Formulir Rekam Medis (Hanya muncul jika diagnosis berhasil) -->
         <div id="formRekamMedis" style="display:none; margin-top: 20px; border-top: 2px dashed #bdc3c7; padding-top: 15px;">
             <h4>📝 Simpan ke Rekam Medis</h4>
             <input type="text" id="namaKlien" placeholder="Masukkan Nama Lengkap Klien">
@@ -78,11 +90,11 @@
         const URL = "./"; 
         
         // =========================================================================
-        // GANTI TEKS DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
+        // ⚠️ GANTI TEKS DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
         // =========================================================================
         const scriptURL = "https://script.google.com/macros/s/AKfycbwt-CJ4MhV5vAs-k6zGyhlU5blKGwhApV3wTNGpLPMI0facy-5Bg0jXLFuI6POspTHa/exec";
         
-        let model, webcam, maxPredictions;
+        let model, webcam, maxPredictions, cropper;
 
         async function init() {
             const modelURL = URL + "model.json";
@@ -95,34 +107,21 @@
             }
         }
 
-        function previewImage(event) {
+        // --- Fungsi Opsi 1 (File/Kamera HP) ---
+        function previewForCrop(event) {
             if(webcam) stopWebcam();
+            
             const reader = new FileReader();
             reader.onload = function(){
-                const img = document.getElementById('imagePreview');
-                img.src = reader.result;
-                img.style.display = 'block';
-                document.getElementById('btnPrediksi').style.display = 'inline-block';
-                document.getElementById('btnCapture').style.display = 'none';
-                document.getElementById('hasilPanel').style.display = 'none';
-                document.getElementById('statusSimpan').innerText = ""; // Reset status simpan
+                setupCropper(reader.result);
             }
             reader.readAsDataURL(event.target.files[0]);
         }
 
-        async function predictImage() {
-            if(!model) return alert("Sistem AI sedang memuat, harap tunggu sebentar.");
-            const img = document.getElementById('imagePreview');
-            const prediction = await model.predict(img);
-            prosesHasil(prediction);
-        }
-
+        // --- Fungsi Opsi 2 (Webcam Laptop) ---
         async function startWebcam() {
             if(!model) return alert("Sistem AI sedang memuat, harap tunggu sebentar.");
-            document.getElementById('imagePreview').style.display = 'none';
-            document.getElementById('btnPrediksi').style.display = 'none';
-            document.getElementById('hasilPanel').style.display = 'none';
-            document.getElementById('statusSimpan').innerText = "";
+            sembunyikanHasil();
             
             const flip = false; 
             webcam = new tmImage.Webcam(300, 300, flip); 
@@ -131,6 +130,7 @@
             window.requestAnimationFrame(loop);
 
             document.getElementById("webcam-container").innerHTML = "";
+            document.getElementById("webcam-container").style.display = "block";
             document.getElementById("webcam-container").appendChild(webcam.canvas);
             
             document.getElementById("btnWebcam").innerText = "Tutup Webcam";
@@ -155,12 +155,55 @@
             }
         }
 
-        async function predictWebcam() {
-            if(!model || !webcam) return;
-            const prediction = await model.predict(webcam.canvas);
+        function captureWebcamForCrop() {
+            if(!webcam) return;
+            // Ambil gambar dari canvas webcam saat ini
+            const frame = webcam.canvas.toDataURL("image/png");
+            stopWebcam(); // Matikan webcam setelah dijepret
+            setupCropper(frame);
+        }
+
+        // --- Sistem Pemotong Gambar (Cropper) ---
+        function setupCropper(imageSrc) {
+            sembunyikanHasil();
+            const imgElement = document.getElementById('imageToCrop');
+            imgElement.src = imageSrc;
+            
+            document.getElementById('cropContainer').style.display = 'block';
+            document.getElementById('btnPrediksi').style.display = 'block';
+
+            // Hapus cropper lama jika ada
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            // Inisialisasi Cropper baru (Bentuk kotak rasio 1:1 agar pas dengan AI)
+            cropper = new Cropper(imgElement, {
+                aspectRatio: 1,
+                viewMode: 1,
+                autoCropArea: 0.8,
+            });
+        }
+
+        async function predictCroppedImage() {
+            if(!model || !cropper) return alert("Sistem AI sedang memuat atau gambar belum dipilih.");
+            
+            // Mengambil area gambar yang sudah dipotong oleh user
+            const canvas = cropper.getCroppedCanvas({ width: 224, height: 224 });
+            
+            // Menganalisis gambar hasil potongan
+            const prediction = await model.predict(canvas);
             prosesHasil(prediction);
         }
 
+        function sembunyikanHasil() {
+            document.getElementById('hasilPanel').style.display = 'none';
+            document.getElementById('cropContainer').style.display = 'none';
+            document.getElementById('btnPrediksi').style.display = 'none';
+            document.getElementById('statusSimpan').innerText = "";
+        }
+
+        // --- Mesin Rekomendasi Terpadu ---
         function prosesHasil(prediction) {
             let highestProb = 0;
             let diagnosis = "";
@@ -181,10 +224,10 @@
             if (diagnosis === "Bukan_Lidah") {
                 judul = "⚠️ Sistem Tidak Menemukan Lidah";
                 warna = "#f39c12"; 
-                penjelasan = "Kamera mendeteksi wajah atau objek lain, namun tidak melihat lidah yang menjulur. Harap ikuti panduan foto, julurkan lidah Anda, dan coba ambil gambar kembali.";
+                penjelasan = "Area yang Anda potong tidak terdeteksi sebagai lidah. Silakan ulangi dan pastikan kotak seleksi hanya menyorot area lidah.";
                 titik = "-";
                 jamu = "-";
-                tampilkanForm = false; // Sembunyikan form rekam medis jika bukan lidah
+                tampilkanForm = false;
             } else if (diagnosis === "Panas") {
                 judul = "Sindrom Terdeteksi: Panas";
                 penjelasan = "Tubuh Anda saat ini sedang menyimpan kelebihan energi panas. Biasanya kondisi ini membuat Anda mudah merasa haus, gerah, emosi sedikit lebih reaktif, atau tidur terasa kurang nyenyak. Mari kita sejukkan kembali sistem tubuh Anda.";
@@ -214,12 +257,13 @@
             document.getElementById('teksAkupunktur').innerText = titik;
             document.getElementById('teksJamu').innerText = jamu;
             
-            // Atur tampilan form rekam medis
             document.getElementById('formRekamMedis').style.display = tampilkanForm ? 'block' : 'none';
             document.getElementById('hasilPanel').style.display = 'block';
+            
+            // Gulir otomatis ke hasil panel
+            document.getElementById('hasilPanel').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // --- Fungsi Pengiriman Data ke Google Sheets ---
         async function simpanKeSpreadsheet() {
             const nama = document.getElementById('namaKlien').value;
             if(!nama) return alert("Sapunten, silakan isi nama klien terlebih dahulu.");
@@ -235,7 +279,7 @@
             try {
                 await fetch(scriptURL, {
                     method: 'POST',
-                    mode: 'no-cors', // Penting agar tidak diblokir oleh sistem keamanan Google
+                    mode: 'no-cors', 
                     body: JSON.stringify({
                         namaKlien: nama,
                         diagnosis: diagnosis,
@@ -247,7 +291,7 @@
                 
                 status.innerText = "✅ Data berhasil disimpan ke Spreadsheet!";
                 status.style.color = "#27ae60";
-                document.getElementById('namaKlien').value = ""; // Kosongkan kolom nama setelah berhasil
+                document.getElementById('namaKlien').value = ""; 
             } catch (error) {
                 console.error('Error!', error.message);
                 status.innerText = "❌ Gagal menyimpan data. Silakan cek koneksi internet Anda.";
