@@ -3,98 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Diagnostik Lidah TCM</title>
-    <!-- Memuat Library AI -->
+    <title>Sistem CDSS - Diagnostik TCM Akupunktur Tung</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-    <!-- Memuat Library Pemotong Gambar (Cropper.js) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 2rem auto; padding: 0 1rem; color: #333; }
         h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
         .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; }
+        .alert-box { background-color: #e8f4f8; color: #2980b9; border: 1px solid #bce8f1; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
         
-        .alert-box { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem; }
-        .alert-box ul { margin: 0.5rem 0 0 0; padding-left: 1.2rem; }
-        
-        .opsi-input { display: flex; flex-direction: column; gap: 15px; background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px; margin-right: 5px; }
+        .opsi-input { background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; }
         button:hover { background: #2980b9; }
         .btn-secondary { background: #2ecc71; }
-        .btn-secondary:hover { background: #27ae60; }
-        .btn-warning { background: #e67e22; width: 100%; margin-top: 15px; }
-        .btn-warning:hover { background: #d35400; }
+        .btn-warning { background: #e67e22; }
         
-        /* Area Cropper */
         .img-container { max-width: 100%; max-height: 400px; margin-top: 15px; display: none; }
         img { max-width: 100%; }
         #webcam-container canvas { border-radius: 4px; max-width: 100%; }
         
-        input[type="text"] { width: 100%; padding: 10px; margin-top: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
+        /* Gaya Form Anamnesis */
+        .anamnesis-panel { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        select, input[type="text"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .checkbox-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .checkbox-group label { background: #f4f4f4; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h2>Sistem Diagnostik Lidah TCM</h2>
-    <p>Unggah foto atau gunakan WebCam, potong area lidah, dan biarkan AI menganalisis.</p>
+    <h2>Asisten CDSS Klinik TCM</h2>
     
-    <div class="alert-box">
-        <strong>💡 Panduan Penggunaan:</strong>
-        <ul>
-            <li>Ambil gambar menggunakan kamera (bebas jarak).</li>
-            <li><strong>Geser kotak seleksi</strong> agar HANYA menyorot area lidah.</li>
-            <li>Klik tombol Analisis.</li>
-        </ul>
-    </div>
-    
-    <div class="opsi-input">
-        <div>
-            <strong>Opsi 1: Dari HP / File Komputer</strong><br><br>
-            <input type="file" id="imageUpload" accept="image/*" onchange="previewForCrop(event)">
-        </div>
-        <hr style="width: 100%; border: 0; border-top: 1px solid #bdc3c7;">
-        <div>
-            <strong>Opsi 2: Dari Kamera Laptop (Webcam)</strong><br>
-            <button class="btn-secondary" id="btnWebcam" onclick="startWebcam()">🎥 Buka Webcam</button>
-            <button class="btn-secondary" id="btnCapture" onclick="captureWebcamForCrop()" style="display:none;">📸 Jepret Gambar</button>
+    <!-- Lapis 2: Modul Anamnesis (Input Pengobat) -->
+    <div class="anamnesis-panel">
+        <label><strong>1. Pilih Keluhan Utama Klien:</strong></label>
+        <select id="keluhanUtama" onchange="updateGejala()">
+            <option value="">-- Pilih Kategori --</option>
+            <option value="pencernaan">Gangguan Pencernaan (Maag, Diare, Sembelit)</option>
+            <option value="muskuloskeletal">Nyeri Otot, Tulang & Sendi (Asam Urat, Pinggang)</option>
+            <option value="kardiovaskular">Kardiovaskular & Metabolik (Hipertensi, Diabetes)</option>
+            <option value="napas">Kepala, Tidur & Pernapasan (Sakit Kepala, Flu)</option>
+        </select>
+
+        <div id="panelGejala" style="display:none; margin-top: 15px;">
+            <label><strong>2. Centang Gejala Penyerta:</strong></label>
+            <div id="daftarGejala" class="checkbox-group">
+                <!-- Checkbox akan dimunculkan oleh JS -->
+            </div>
         </div>
     </div>
 
-    <!-- Area Pratinjau Webcam -->
+    <!-- Lapis 1: Deteksi AI -->
+    <div class="opsi-input">
+        <p style="margin-top:0;"><strong>3. Analisis Lidah (AI):</strong></p>
+        <input type="file" id="imageUpload" accept="image/*" onchange="previewForCrop(event)" style="margin-bottom: 10px;">
+        <button class="btn-secondary" id="btnWebcam" onclick="startWebcam()">🎥 Atau Gunakan Webcam</button>
+        <button class="btn-secondary" id="btnCapture" onclick="captureWebcamForCrop()" style="display:none;">📸 Jepret Gambar</button>
+    </div>
+
     <div id="webcam-container"></div>
     
-    <!-- Area Pemotongan (Crop) -->
     <div class="img-container" id="cropContainer">
         <img id="imageToCrop" src="">
     </div>
     
-    <button id="btnPrediksi" class="btn-warning" onclick="predictCroppedImage()" style="display:none;">🔍 Analisis Area Terpilih</button>
+    <button id="btnPrediksi" class="btn-warning" onclick="predictCroppedImage()" style="display:none;">🔍 Proses CDSS (Lidah + Keluhan)</button>
 
+    <!-- Lapis 3: Keluaran Rekomendasi Terpadu -->
     <div id="hasilPanel" class="card" style="display:none;">
-        <h3 id="teksDiagnosis" style="color: #e74c3c;">Diagnosis: -</h3>
-        <p id="teksPenjelasan" style="font-style: italic; margin-bottom: 15px; color: #555;"></p>
-        <p><strong>Titik Akupunktur:</strong> <span id="teksAkupunktur">-</span></p>
-        <p><strong>Formula Herbal (500mg):</strong> <span id="teksJamu">-</span></p>
+        <h3 id="teksDiagnosis" style="color: #e74c3c;">Sindrom Terdeteksi: -</h3>
+        <p id="teksPenjelasan" style="font-style: italic; color: #555;"></p>
+        <hr>
+        <p><strong>🎯 Titik Akupunktur Master Tung:</strong> <br><span id="teksAkupunktur">-</span></p>
+        <p><strong>💊 Formula Kapsul Jamu (500mg):</strong> <br><span id="teksJamu">-</span></p>
+        <div style="background: #e8f4f8; padding: 10px; border-radius: 5px; margin-top: 10px;">
+            <p style="margin-top:0;"><strong>🏃 Terapi Fisik:</strong> <br><span id="teksFisik">-</span></p>
+            <p style="margin-bottom:0;"><strong>🍲 Edukasi Pola Makan:</strong> <br><span id="teksMakanan">-</span></p>
+        </div>
         
-        <div id="formRekamMedis" style="display:none; margin-top: 20px; border-top: 2px dashed #bdc3c7; padding-top: 15px;">
+        <div id="formRekamMedis" style="margin-top: 20px; border-top: 2px dashed #bdc3c7; padding-top: 15px;">
             <h4>📝 Simpan ke Rekam Medis</h4>
             <input type="text" id="namaKlien" placeholder="Masukkan Nama Lengkap Klien">
-            <button class="btn-secondary" onclick="simpanKeSpreadsheet()" style="width: 100%;">💾 Simpan Data</button>
+            <button class="btn-secondary" onclick="simpanKeSpreadsheet()">💾 Simpan Data</button>
             <p id="statusSimpan" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
         </div>
     </div>
 
     <script>
         const URL = "./"; 
-        
-        // =========================================================================
-        // ⚠️ GANTI TEKS DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
-        // =========================================================================
         const scriptURL = "https://script.google.com/macros/s/AKfycbwt-CJ4MhV5vAs-k6zGyhlU5blKGwhApV3wTNGpLPMI0facy-5Bg0jXLFuI6POspTHa/exec";
         
         let model, webcam, maxPredictions, cropper;
+
+        // Data Gejala Dinamis
+        const gejalaPenyerta = {
+            pencernaan: [
+                {id: "mual", label: "Mual / Muntah / Asam Lambung Naik (GERD)"},
+                {id: "kembung", label: "Perut Kembung / Begah / Banyak Gas"},
+                {id: "diare", label: "Diare / BAB Cair (Lebih dari 3x sehari)"},
+                {id: "sembelit", label: "Sembelit / BAB Keras atau Sulit"}
+            ],
+            muskuloskeletal: [
+                {id: "nyeri_pindah", label: "Nyeri berpindah-pindah"},
+                {id: "bengkak_merah", label: "Sendi bengkak kemerahan & panas (Akut)"}
+            ],
+            kardiovaskular: [
+                {id: "tengkuk_berat", label: "Tengkuk terasa kaku/berat"},
+                {id: "kesemutan", label: "Sering kesemutan ujung jari"}
+            ],
+            napas: [
+                {id: "dahak_kuning", label: "Demam & Dahak kuning kental"},
+                {id: "dahak_putih", label: "Menggigil & Dahak putih encer"}
+            ]
+        };
+
+        function updateGejala() {
+            const kategori = document.getElementById("keluhanUtama").value;
+            const panel = document.getElementById("panelGejala");
+            const daftar = document.getElementById("daftarGejala");
+            
+            daftar.innerHTML = "";
+            if (kategori && gejalaPenyerta[kategori]) {
+                gejalaPenyerta[kategori].forEach(g => {
+                    daftar.innerHTML += `<label><input type="checkbox" value="${g.id}"> ${g.label}</label>`;
+                });
+                panel.style.display = "block";
+            } else {
+                panel.style.display = "none";
+            }
+        }
 
         async function init() {
             const modelURL = URL + "model.json";
@@ -107,49 +146,35 @@
             }
         }
 
-        // --- Fungsi Opsi 1 (File/Kamera HP) ---
         function previewForCrop(event) {
             if(webcam) stopWebcam();
-            
             const reader = new FileReader();
-            reader.onload = function(){
-                setupCropper(reader.result);
-            }
+            reader.onload = function(){ setupCropper(reader.result); }
             reader.readAsDataURL(event.target.files[0]);
         }
 
-        // --- Fungsi Opsi 2 (Webcam Laptop) ---
         async function startWebcam() {
-            if(!model) return alert("Sistem AI sedang memuat, harap tunggu sebentar.");
+            if(!model) return alert("AI sedang memuat...");
             sembunyikanHasil();
-            
-            const flip = false; 
-            webcam = new tmImage.Webcam(300, 300, flip); 
+            webcam = new tmImage.Webcam(300, 300, false); 
             await webcam.setup(); 
             await webcam.play();
             window.requestAnimationFrame(loop);
-
             document.getElementById("webcam-container").innerHTML = "";
             document.getElementById("webcam-container").style.display = "block";
             document.getElementById("webcam-container").appendChild(webcam.canvas);
-            
             document.getElementById("btnWebcam").innerText = "Tutup Webcam";
             document.getElementById("btnWebcam").setAttribute("onclick", "stopWebcam()");
-            document.getElementById("btnCapture").style.display = "inline-block";
+            document.getElementById("btnCapture").style.display = "block";
         }
 
-        async function loop() {
-            if(webcam) {
-                webcam.update(); 
-                window.requestAnimationFrame(loop);
-            }
-        }
+        async function loop() { if(webcam) { webcam.update(); window.requestAnimationFrame(loop); } }
 
         function stopWebcam() {
             if(webcam) {
                 webcam.stop();
                 document.getElementById("webcam-container").innerHTML = "";
-                document.getElementById("btnWebcam").innerText = "🎥 Buka Webcam";
+                document.getElementById("btnWebcam").innerText = "🎥 Gunakan Webcam";
                 document.getElementById("btnWebcam").setAttribute("onclick", "startWebcam()");
                 document.getElementById("btnCapture").style.display = "none";
             }
@@ -157,124 +182,120 @@
 
         function captureWebcamForCrop() {
             if(!webcam) return;
-            // Ambil gambar dari canvas webcam saat ini
-            const frame = webcam.canvas.toDataURL("image/png");
-            stopWebcam(); // Matikan webcam setelah dijepret
-            setupCropper(frame);
+            setupCropper(webcam.canvas.toDataURL("image/png"));
+            stopWebcam();
         }
 
-        // --- Sistem Pemotong Gambar (Cropper) ---
         function setupCropper(imageSrc) {
             sembunyikanHasil();
             const imgElement = document.getElementById('imageToCrop');
             imgElement.src = imageSrc;
-            
             document.getElementById('cropContainer').style.display = 'block';
             document.getElementById('btnPrediksi').style.display = 'block';
-
-            // Hapus cropper lama jika ada
-            if (cropper) {
-                cropper.destroy();
-            }
-
-            // Inisialisasi Cropper baru (Bentuk kotak rasio 1:1 agar pas dengan AI)
-            cropper = new Cropper(imgElement, {
-                aspectRatio: 1,
-                viewMode: 1,
-                autoCropArea: 0.8,
-            });
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(imgElement, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.8 });
         }
 
         async function predictCroppedImage() {
-            if(!model || !cropper) return alert("Sistem AI sedang memuat atau gambar belum dipilih.");
+            const kategori = document.getElementById("keluhanUtama").value;
+            if(!kategori) return alert("Silakan pilih Keluhan Utama terlebih dahulu.");
+            if(!model || !cropper) return alert("Sistem AI sedang memuat atau gambar belum siap.");
             
-            // Mengambil area gambar yang sudah dipotong oleh user
             const canvas = cropper.getCroppedCanvas({ width: 224, height: 224 });
-            
-            // Menganalisis gambar hasil potongan
             const prediction = await model.predict(canvas);
-            prosesHasil(prediction);
+            prosesMesinLogika(prediction, kategori);
         }
 
         function sembunyikanHasil() {
             document.getElementById('hasilPanel').style.display = 'none';
             document.getElementById('cropContainer').style.display = 'none';
             document.getElementById('btnPrediksi').style.display = 'none';
-            document.getElementById('statusSimpan').innerText = "";
         }
 
-        // --- Mesin Rekomendasi Terpadu ---
-        function prosesHasil(prediction) {
-            let highestProb = 0;
-            let diagnosis = "";
+        function getCheckedGejala() {
+            const checkboxes = document.querySelectorAll('#daftarGejala input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        // --- MESIN LOGIKA SILANG (CROSS-LOGIC CDSS) ---
+        function prosesMesinLogika(prediction, kategori) {
+            let highestProb = 0; let lidahAI = "";
             for (let i = 0; i < maxPredictions; i++) {
                 if (prediction[i].probability > highestProb) {
                     highestProb = prediction[i].probability;
-                    diagnosis = prediction[i].className;
+                    lidahAI = prediction[i].className;
                 }
             }
             
-            let judul = "";
-            let warna = "#e74c3c"; 
-            let penjelasan = "";
-            let titik = "";
-            let jamu = "";
-            let tampilkanForm = true;
+            const gejala = getCheckedGejala();
+            let judul = `AI Lidah: ${lidahAI}`;
+            let penjelasan = "Kombinasi sindrom dan keluhan telah dianalisis.";
+            let titik = "Zu San Li (ST36) - Titik umum keseimbangan.";
+            let jamu = "Membutuhkan anamnesis lanjutan.";
+            let fisik = "Aktivitas ringan harian.";
+            let makanan = "Makan gizi seimbang.";
 
-            if (diagnosis === "Bukan_Lidah") {
-                judul = "⚠️ Sistem Tidak Menemukan Lidah";
-                warna = "#f39c12"; 
-                penjelasan = "Area yang Anda potong tidak terdeteksi sebagai lidah. Silakan ulangi dan pastikan kotak seleksi hanya menyorot area lidah.";
-                titik = "-";
-                jamu = "-";
-                tampilkanForm = false;
-            } else if (diagnosis === "Panas") {
-                judul = "Sindrom Terdeteksi: Panas";
-                penjelasan = "Tubuh Anda saat ini sedang menyimpan kelebihan energi panas. Biasanya kondisi ini membuat Anda mudah merasa haus, gerah, emosi sedikit lebih reaktif, atau tidur terasa kurang nyenyak. Mari kita sejukkan kembali sistem tubuh Anda.";
-                titik = "Ling Gu (22.05), Da Bai (22.04) - insersi kontralateral.";
-                jamu = "200mg Sambiloto, 150mg Alang-alang, 150mg Temulawak (Dosis: 2x2 kapsul/hari).";
-            } else if (diagnosis === "Dingin_Lembap") {
-                judul = "Sindrom Terdeteksi: Dingin & Lembap";
-                penjelasan = "Sistem pencernaan Anda sedang kelelahan dan membutuhkan kehangatan ekstra. Tubuh cenderung menumpuk cairan yang tidak terproses, sehingga sering kali membuat badan terasa berat, mudah lelah, atau buang air besar kurang padat.";
-                titik = "Sima (88.17, 88.18, 88.19) dan Tong Shen (88.09).";
-                jamu = "250mg Jahe Merah, 150mg Kunyit, 100mg Kayu Manis (Dosis: 2x2 kapsul/hari).";
-            } else if (diagnosis === "Stagnasi") {
-                judul = "Sindrom Terdeteksi: Stagnasi (Sirkulasi Terhambat)";
-                penjelasan = "Ada aliran energi atau sirkulasi darah yang kurang lancar di dalam tubuh Anda. Kondisi ini sering kali bermanifestasi sebagai rasa pegal yang menetap, ketegangan otot, atau nyeri di area tertentu. Kita perlu mengurai sumbatan ini agar tubuh kembali ringan.";
-                titik = "Huo Ying (33.04), Huo Zhu (33.05) disertai teknik bleeding pada titik ashi.";
-                jamu = "200mg Temu Ireng, 200mg Kunyit Putih, 100mg Pegagan (Dosis: 2x2 kapsul/hari).";
-            } else {
-                judul = "Kondisi Terdeteksi: Normal / Stabil";
-                warna = "#27ae60"; 
-                penjelasan = "Kabar baik! Kondisi lidah Anda secara umum menunjukkan keseimbangan yang sangat baik. Mari pertahankan dengan pola makan bergizi, kelola pikiran agar tetap rileks, dan istirahat yang cukup.";
-                titik = "Zu San Li (ST36) untuk pemeliharaan Qi dan Darah secara umum.";
-                jamu = "300mg Temulawak, 200mg Meniran (Dosis: 1x1 kapsul/hari).";
+            if (lidahAI === "Bukan_Lidah") {
+                alert("Area terpotong bukan lidah. Silakan ulangi."); return;
+            }
+
+            // --- LOGIKA KHUSUS: PENCERNAAN ---
+            if (kategori === "pencernaan") {
+                if (gejala.includes("mual")) {
+                    // Integrasi Tabel Makanan & Fisik untuk GERD
+                    penjelasan = "Terdapat indikasi Qi Lambung yang berbalik (Rebellious Qi) memicu mual/GERD.";
+                    titik = "Men Jin (66.05) untuk meredakan mual, Si Hua Zhong (77.09) bilat.";
+                    jamu = (lidahAI === "Panas") ? "150mg Kunyit, 200mg Temulawak, 150mg Pegagan (Dosis 2x2, lindungi lambung)." : "200mg Kunyit, 150mg Jahe Merah, 150mg Temulawak (Dosis 2x2).";
+                    fisik = "Aktivitas ringan, relaksasi; hindari berbaring setelah makan[span_1](start_span)[span_1](end_span).";
+                    makanan = "Porsi kecil; makanan yang ditoleransi; air putih[span_2](start_span)[span_2](end_span). Hindari makan sangat banyak atau minum kopi bila memicu[span_3](start_span)[span_3](end_span).";
+                } 
+                else if (gejala.includes("sembelit")) {
+                    penjelasan = "Energi pencernaan tidak mampu mendorong sisa metabolisme ke bawah.";
+                    titik = "Qi Men (33.01), Qi Jiao (33.02) untuk usus besar.";
+                    jamu = (lidahAI === "Panas") ? "200mg Lidah Buaya, 200mg Sambiloto, 100mg Temulawak." : "200mg Kunyit, 300mg Rimpang Kencur.";
+                    fisik = "Jalan kaki, aktivitas fisik, latihan abdominal ringan[span_4](start_span)[span_4](end_span).";
+                    makanan = "Air cukup, sayur, buah, kacang, biji-bijian[span_5](start_span)[span_5](end_span). Hindari pola makan rendah serat[span_6](start_span)[span_6](end_span).";
+                }
+                else if (gejala.includes("diare")) {
+                    penjelasan = "Limpa kehilangan kemampuan memilah cairan murni dan keruh.";
+                    titik = "Chang Men (33.10) spesifik untuk diare/radang usus.";
+                    jamu = "250mg Jahe Merah, 150mg Kunyit, 100mg Kayu Manis.";
+                    fisik = "Istirahat; bukan terapi pijat[span_7](start_span)[span_7](end_span).";
+                    makanan = "Cairan + elektrolit/ORS; makanan mudah ditoleransi[span_8](start_span)[span_8](end_span). Hindari alkohol dan makanan yang memperburuk gejala[span_9](start_span)[span_9](end_span).";
+                }
+            } 
+            // Default jika Kategori Lain belum diprogram logikanya
+            else {
+                penjelasan = "Kategori ini sedang dalam tahap pengembangan logika sistem (Prototipe).";
             }
 
             document.getElementById('teksDiagnosis').innerText = judul;
-            document.getElementById('teksDiagnosis').style.color = warna;
             document.getElementById('teksPenjelasan').innerText = penjelasan;
             document.getElementById('teksAkupunktur').innerText = titik;
             document.getElementById('teksJamu').innerText = jamu;
+            document.getElementById('teksFisik').innerText = fisik;
+            document.getElementById('teksMakanan').innerText = makanan;
             
-            document.getElementById('formRekamMedis').style.display = tampilkanForm ? 'block' : 'none';
             document.getElementById('hasilPanel').style.display = 'block';
-            
-            // Gulir otomatis ke hasil panel
             document.getElementById('hasilPanel').scrollIntoView({ behavior: 'smooth' });
         }
 
         async function simpanKeSpreadsheet() {
             const nama = document.getElementById('namaKlien').value;
-            if(!nama) return alert("Sapunten, silakan isi nama klien terlebih dahulu.");
+            if(!nama) return alert("Silakan isi nama klien.");
             
-            const diagnosis = document.getElementById('teksDiagnosis').innerText.replace("Sindrom Terdeteksi: ", "").replace("Kondisi Terdeteksi: ", "");
+            const e_keluhan = document.getElementById('keluhanUtama');
+            const keluhanTeks = e_keluhan.options[e_keluhan.selectedIndex].text;
+            const gejala = getCheckedGejala().join(", ");
+            
+            const diagnosis = document.getElementById('teksDiagnosis').innerText;
             const titik = document.getElementById('teksAkupunktur').innerText;
             const jamu = document.getElementById('teksJamu').innerText;
+            const fisik = document.getElementById('teksFisik').innerText;
+            const makanan = document.getElementById('teksMakanan').innerText;
             
             const status = document.getElementById('statusSimpan');
-            status.innerText = "⏳ Mengirim data ke server...";
-            status.style.color = "#2980b9";
+            status.innerText = "⏳ Mengirim data...";
             
             try {
                 await fetch(scriptURL, {
@@ -282,19 +303,20 @@
                     mode: 'no-cors', 
                     body: JSON.stringify({
                         namaKlien: nama,
+                        keluhan: keluhanTeks + " (" + gejala + ")",
                         diagnosis: diagnosis,
                         titik: titik,
-                        jamu: jamu
+                        jamu: jamu,
+                        terapiFisik: fisik + " | " + makanan
                     }),
                     headers: { 'Content-Type': 'application/json' }
                 });
                 
-                status.innerText = "✅ Data berhasil disimpan ke Spreadsheet!";
+                status.innerText = "✅ Rekam Medis Berhasil Disimpan!";
                 status.style.color = "#27ae60";
                 document.getElementById('namaKlien').value = ""; 
             } catch (error) {
-                console.error('Error!', error.message);
-                status.innerText = "❌ Gagal menyimpan data. Silakan cek koneksi internet Anda.";
+                status.innerText = "❌ Gagal menyimpan data.";
                 status.style.color = "#e74c3c";
             }
         }
@@ -302,4 +324,4 @@
         window.onload = init;
     </script>
 </body>
-</html>
+    </html>
