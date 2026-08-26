@@ -242,26 +242,26 @@
             // --- LOGIKA KHUSUS: PENCERNAAN ---
             if (kategori === "pencernaan") {
                 if (gejala.includes("mual")) {
-                    // Integrasi Tabel Makanan & Fisik untuk GERD
                     penjelasan = "Terdapat indikasi Qi Lambung yang berbalik (Rebellious Qi) memicu mual/GERD.";
                     titik = "Men Jin (66.05) untuk meredakan mual, Si Hua Zhong (77.09) bilat.";
                     jamu = (lidahAI === "Panas") ? "150mg Kunyit, 200mg Temulawak, 150mg Pegagan (Dosis 2x2, lindungi lambung)." : "200mg Kunyit, 150mg Jahe Merah, 150mg Temulawak (Dosis 2x2).";
-                    fisik = "Aktivitas ringan, relaksasi; hindari berbaring setelah makan[span_1](start_span)[span_1](end_span).";
-                    makanan = "Porsi kecil; makanan yang ditoleransi; air putih[span_2](start_span)[span_2](end_span). Hindari makan sangat banyak atau minum kopi bila memicu[span_3](start_span)[span_3](end_span).";
+                    fisik = "Aktivitas ringan, relaksasi; hindari berbaring setelah makan.";
+                    makanan = "Porsi kecil; makanan yang ditoleransi; air putih. Hindari makan sangat banyak atau minum kopi.";
                 } 
                 else if (gejala.includes("sembelit")) {
                     penjelasan = "Energi pencernaan tidak mampu mendorong sisa metabolisme ke bawah.";
                     titik = "Qi Men (33.01), Qi Jiao (33.02) untuk usus besar.";
                     jamu = (lidahAI === "Panas") ? "200mg Lidah Buaya, 200mg Sambiloto, 100mg Temulawak." : "200mg Kunyit, 300mg Rimpang Kencur.";
-                    fisik = "Jalan kaki, aktivitas fisik, latihan abdominal ringan[span_4](start_span)[span_4](end_span).";
-                    makanan = "Air cukup, sayur, buah, kacang, biji-bijian[span_5](start_span)[span_5](end_span). Hindari pola makan rendah serat[span_6](start_span)[span_6](end_span).";
+                    fisik = "Jalan kaki, aktivitas fisik, latihan abdominal ringan.";
+                    makanan = "Air cukup, sayur, buah, kacang, biji-bijian. Hindari pola makan rendah serat.";
                 }
                 else if (gejala.includes("diare")) {
                     penjelasan = "Limpa kehilangan kemampuan memilah cairan murni dan keruh.";
                     titik = "Chang Men (33.10) spesifik untuk diare/radang usus.";
-                    jamu = "250mg Jahe Merah, 150mg Kunyit, 100mg Kayu Manis.";
-                    fisik = "Istirahat; bukan terapi pijat[span_7](start_span)[span_7](end_span).";
-                    makanan = "Cairan + elektrolit/ORS; makanan mudah ditoleransi[span_8](start_span)[span_8](end_span). Hindari alkohol dan makanan yang memperburuk gejala[span_9](start_span)[span_9](end_span).";
+                    // Logika jamu Diare telah diperbaiki di sini:
+                    jamu = (lidahAI === "Panas") ? "200mg Sambiloto, 150mg Kunyit, 150mg Daun Jambu Biji." : "250mg Jahe Merah, 150mg Kunyit, 100mg Kayu Manis.";
+                    fisik = "Istirahat; bukan terapi pijat perut.";
+                    makanan = "Cairan dan elektrolit/ORS; makanan mudah ditoleransi. Hindari makanan pedas dan alkohol.";
                 }
             } 
             // Default jika Kategori Lain belum diprogram logikanya
