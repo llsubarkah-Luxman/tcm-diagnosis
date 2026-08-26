@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CDSS TCM - AI Auto-Crop & Auto-Resize Final</title>
+    <title>CDSS TCM - AI Pintar Adaptif</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.3/dist/face-landmarks-detection.js"></script>
@@ -33,7 +33,6 @@
     
     <div id="status-ai">⏳ Sedang memuat AI...</div>
 
-    <!-- Modul Anamnesis -->
     <div class="anamnesis-panel">
         <label><strong>1. Pilih Keluhan Utama Klien:</strong></label>
         <select id="keluhanUtama" onchange="updateGejala()">
@@ -47,20 +46,17 @@
         </div>
     </div>
 
-    <!-- Input Gambar -->
     <div class="opsi-input">
-        <p style="margin-top:0;"><strong>3. Analisis Lidah (Otomatis Cepat):</strong></p>
+        <p style="margin-top:0;"><strong>3. Unggah Foto Lidah (Jarak Jauh / Dekat):</strong></p>
         <input type="file" id="imageUpload" accept="image/*" onchange="prosesGambarCepat(event)" style="margin-bottom: 10px;">
         
-        <!-- Area Hasil Auto-Crop -->
         <div class="preview-container" id="previewAreaAuto" style="display:none;">
-            <p style="margin: 0; font-size: 14px; color: #555;">Area Lidah Terkunci Secara Otomatis:</p>
+            <p id="teksPreview" style="margin: 0; font-size: 14px; color: #555;">Area Lidah Siap Dianalisis:</p>
             <canvas id="canvas-autocrop"></canvas>
             <button class="btn-warning" onclick="prediksiSindrom()">🔍 Analisis Lidah & Keluhan</button>
         </div>
     </div>
 
-    <!-- Keluaran -->
     <div id="hasilPanel" class="card" style="display:none;">
         <h3 id="teksDiagnosis" style="color: #e74c3c;">Sindrom Terdeteksi: -</h3>
         <p id="teksPenjelasan" style="font-style: italic; color: #555;"></p>
@@ -123,12 +119,26 @@
                 faceModel = await faceLandmarksDetection.load(
                     faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
                 );
-                document.getElementById('status-ai').innerText = "✅ Sistem AI Cepat Siap Digunakan";
+                document.getElementById('status-ai').innerText = "✅ Sistem AI Adaptif Siap Digunakan";
                 document.getElementById('status-ai').style.color = "#27ae60";
             } catch (e) {
                 document.getElementById('status-ai').innerText = "❌ Gagal memuat AI. Pastikan koneksi stabil.";
                 document.getElementById('status-ai').style.color = "#c0392b";
             }
+        }
+
+        // Tampilkan gambar asli jika wajah tidak utuh
+        function setGambarUtuh(canvasSumber) {
+            const canvasAuto = document.getElementById('canvas-autocrop');
+            canvasAuto.width = canvasSumber.width;
+            canvasAuto.height = canvasSumber.height;
+            const ctxAuto = canvasAuto.getContext('2d');
+            ctxAuto.drawImage(canvasSumber, 0, 0);
+            
+            document.getElementById('teksPreview').innerText = "Area Lidah (Mode Close-up):";
+            document.getElementById('previewAreaAuto').style.display = 'flex';
+            document.getElementById('status-ai').innerText = "✅ Foto Jarak Dekat Siap Diproses.";
+            document.getElementById('status-ai').style.color = "#2980b9";
         }
 
         function prosesGambarCepat(event) {
@@ -138,14 +148,13 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            document.getElementById('status-ai').innerText = "⚙️ Menyusutkan dan memindai foto...";
+            document.getElementById('status-ai').innerText = "⚙️ Memindai foto...";
             document.getElementById('status-ai').style.color = "#e67e22";
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = async function() {
-                    // Logika Auto-Resize berbasis Canvas (Sangat Ringan)
                     let maxDim = 800;
                     let width = img.width;
                     let height = img.height;
@@ -160,19 +169,17 @@
                         }
                     }
 
-                    // Kanvas Virtual
                     const tempCanvas = document.createElement('canvas');
                     tempCanvas.width = width;
                     tempCanvas.height = height;
                     const ctx = tempCanvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    // Langsung kirim Kanvas Virtual ke AI (Tanpa diubah ke Teks/Base64)
                     try {
-                        if(!faceModel) throw new Error("AI Wajah belum siap.");
                         const predictions = await faceModel.estimateFaces({ input: tempCanvas });
                         
                         if (predictions.length > 0) {
+                            // WAJAH DITEMUKAN -> AUTO CROP
                             const annotations = predictions[0].annotations;
                             const bibirKiri = annotations.lipsLeftInner[0];
                             const bibirKanan = annotations.lipsRightInner[0];
@@ -191,22 +198,19 @@
                             canvasAuto.width = sWidth;
                             canvasAuto.height = sHeight;
                             const ctxAuto = canvasAuto.getContext('2d');
-                            
                             ctxAuto.drawImage(tempCanvas, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
+                            document.getElementById('teksPreview').innerText = "Area Lidah (Auto-Crop):";
                             document.getElementById('previewAreaAuto').style.display = 'flex';
-                            document.getElementById('status-ai').innerText = "✅ Auto-Crop Berhasil Kilat!";
+                            document.getElementById('status-ai').innerText = "✅ Auto-Crop Berhasil!";
                             document.getElementById('status-ai').style.color = "#27ae60";
                         } else {
-                            alert("Wajah tidak terdeteksi secara utuh. Mohon pastikan foto menampilkan area dahi hingga dagu dengan jelas.");
-                            document.getElementById('status-ai').innerText = "⚠️ Mohon unggah ulang foto yang jelas.";
-                            document.getElementById('status-ai').style.color = "#c0392b";
+                            // WAJAH TIDAK DITEMUKAN (TAPI TIDAK ERROR) -> ANGGAP CLOSE UP
+                            setGambarUtuh(tempCanvas);
                         }
                     } catch (err) {
-                        console.error(err);
-                        alert("Terjadi kesalahan teknis pada AI saat memindai.");
-                        document.getElementById('status-ai').innerText = "❌ Gagal memindai.";
-                        document.getElementById('status-ai').style.color = "#c0392b";
+                        // AI WAJAH ERROR (TERLALU DEKAT) -> ANGGAP CLOSE UP
+                        setGambarUtuh(tempCanvas);
                     }
                 };
                 img.src = e.target.result;
