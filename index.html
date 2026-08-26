@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Diagnostik Lidah TCM</title>
-    <!-- Memuat Library TensorFlow.js & Teachable Machine via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <style>
@@ -12,12 +11,10 @@
         h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
         .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; }
         
-        /* Kotak Panduan */
         .alert-box { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem; }
         .alert-box ul { margin: 0.5rem 0 0 0; padding-left: 1.2rem; }
         .alert-box li { margin-bottom: 0.3rem; }
         
-        /* Tombol & Layout Opsi */
         .opsi-input { display: flex; flex-direction: column; gap: 15px; background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px; margin-right: 5px; }
         button:hover { background: #2980b9; }
@@ -25,6 +22,9 @@
         .btn-secondary:hover { background: #27ae60; }
         
         img, canvas { max-width: 100%; margin-top: 1rem; border-radius: 4px; object-fit: cover; }
+        
+        /* Gaya untuk form input rekam medis */
+        input[type="text"] { width: 100%; padding: 10px; margin-top: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -53,11 +53,9 @@
         </div>
     </div>
 
-    <!-- Area Pratinjau -->
     <div id="webcam-container"></div>
     <img id="imagePreview" style="display:none;">
     
-    <!-- Perbaikan fungsi pada tombol di bawah ini -->
     <button id="btnPrediksi" onclick="predictImage()" style="display:none;">Analisis Gambar</button>
     <button id="btnCapture" class="btn-secondary" onclick="predictWebcam()" style="display:none;">📸 Jepret & Analisis Webcam</button>
 
@@ -66,13 +64,26 @@
         <p id="teksPenjelasan" style="font-style: italic; margin-bottom: 15px; color: #555;"></p>
         <p><strong>Titik Akupunktur:</strong> <span id="teksAkupunktur">-</span></p>
         <p><strong>Formula Herbal (500mg):</strong> <span id="teksJamu">-</span></p>
+        
+        <!-- Formulir Rekam Medis (Hanya muncul jika diagnosis berhasil) -->
+        <div id="formRekamMedis" style="display:none; margin-top: 20px; border-top: 2px dashed #bdc3c7; padding-top: 15px;">
+            <h4>📝 Simpan ke Rekam Medis</h4>
+            <input type="text" id="namaKlien" placeholder="Masukkan Nama Lengkap Klien">
+            <button class="btn-secondary" onclick="simpanKeSpreadsheet()" style="width: 100%;">💾 Simpan Data</button>
+            <p id="statusSimpan" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
+        </div>
     </div>
 
     <script>
         const URL = "./"; 
+        
+        // =========================================================================
+        // GANTI TEKS DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
+        // =========================================================================
+        const scriptURL = "https://script.google.com/macros/s/AKfycbwt-CJ4MhV5vAs-k6zGyhlU5blKGwhApV3wTNGpLPMI0facy-5Bg0jXLFuI6POspTHa/exec";
+        
         let model, webcam, maxPredictions;
 
-        // Inisialisasi Model AI
         async function init() {
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
@@ -84,10 +95,8 @@
             }
         }
 
-        // --- Fungsi Opsi 1 (File/Kamera HP) ---
         function previewImage(event) {
             if(webcam) stopWebcam();
-            
             const reader = new FileReader();
             reader.onload = function(){
                 const img = document.getElementById('imagePreview');
@@ -96,6 +105,7 @@
                 document.getElementById('btnPrediksi').style.display = 'inline-block';
                 document.getElementById('btnCapture').style.display = 'none';
                 document.getElementById('hasilPanel').style.display = 'none';
+                document.getElementById('statusSimpan').innerText = ""; // Reset status simpan
             }
             reader.readAsDataURL(event.target.files[0]);
         }
@@ -107,13 +117,12 @@
             prosesHasil(prediction);
         }
 
-        // --- Fungsi Opsi 2 (Webcam Laptop) ---
         async function startWebcam() {
             if(!model) return alert("Sistem AI sedang memuat, harap tunggu sebentar.");
-            
             document.getElementById('imagePreview').style.display = 'none';
             document.getElementById('btnPrediksi').style.display = 'none';
             document.getElementById('hasilPanel').style.display = 'none';
+            document.getElementById('statusSimpan').innerText = "";
             
             const flip = false; 
             webcam = new tmImage.Webcam(300, 300, flip); 
@@ -152,7 +161,6 @@
             prosesHasil(prediction);
         }
 
-        // --- Mesin Rekomendasi Terpadu ---
         function prosesHasil(prediction) {
             let highestProb = 0;
             let diagnosis = "";
@@ -164,17 +172,19 @@
             }
             
             let judul = "";
-            let warna = "#e74c3c"; // Default merah
+            let warna = "#e74c3c"; 
             let penjelasan = "";
             let titik = "";
             let jamu = "";
+            let tampilkanForm = true;
 
             if (diagnosis === "Bukan_Lidah") {
                 judul = "⚠️ Sistem Tidak Menemukan Lidah";
-                warna = "#f39c12"; // Oranye
+                warna = "#f39c12"; 
                 penjelasan = "Kamera mendeteksi wajah atau objek lain, namun tidak melihat lidah yang menjulur. Harap ikuti panduan foto, julurkan lidah Anda, dan coba ambil gambar kembali.";
                 titik = "-";
                 jamu = "-";
+                tampilkanForm = false; // Sembunyikan form rekam medis jika bukan lidah
             } else if (diagnosis === "Panas") {
                 judul = "Sindrom Terdeteksi: Panas";
                 penjelasan = "Tubuh Anda saat ini sedang menyimpan kelebihan energi panas. Biasanya kondisi ini membuat Anda mudah merasa haus, gerah, emosi sedikit lebih reaktif, atau tidur terasa kurang nyenyak. Mari kita sejukkan kembali sistem tubuh Anda.";
@@ -192,7 +202,7 @@
                 jamu = "200mg Temu Ireng, 200mg Kunyit Putih, 100mg Pegagan (Dosis: 2x2 kapsul/hari).";
             } else {
                 judul = "Kondisi Terdeteksi: Normal / Stabil";
-                warna = "#27ae60"; // Hijau
+                warna = "#27ae60"; 
                 penjelasan = "Kabar baik! Kondisi lidah Anda secara umum menunjukkan keseimbangan yang sangat baik. Mari pertahankan dengan pola makan bergizi, kelola pikiran agar tetap rileks, dan istirahat yang cukup.";
                 titik = "Zu San Li (ST36) untuk pemeliharaan Qi dan Darah secara umum.";
                 jamu = "300mg Temulawak, 200mg Meniran (Dosis: 1x1 kapsul/hari).";
@@ -203,7 +213,46 @@
             document.getElementById('teksPenjelasan').innerText = penjelasan;
             document.getElementById('teksAkupunktur').innerText = titik;
             document.getElementById('teksJamu').innerText = jamu;
+            
+            // Atur tampilan form rekam medis
+            document.getElementById('formRekamMedis').style.display = tampilkanForm ? 'block' : 'none';
             document.getElementById('hasilPanel').style.display = 'block';
+        }
+
+        // --- Fungsi Pengiriman Data ke Google Sheets ---
+        async function simpanKeSpreadsheet() {
+            const nama = document.getElementById('namaKlien').value;
+            if(!nama) return alert("Sapunten, silakan isi nama klien terlebih dahulu.");
+            
+            const diagnosis = document.getElementById('teksDiagnosis').innerText.replace("Sindrom Terdeteksi: ", "").replace("Kondisi Terdeteksi: ", "");
+            const titik = document.getElementById('teksAkupunktur').innerText;
+            const jamu = document.getElementById('teksJamu').innerText;
+            
+            const status = document.getElementById('statusSimpan');
+            status.innerText = "⏳ Mengirim data ke server...";
+            status.style.color = "#2980b9";
+            
+            try {
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Penting agar tidak diblokir oleh sistem keamanan Google
+                    body: JSON.stringify({
+                        namaKlien: nama,
+                        diagnosis: diagnosis,
+                        titik: titik,
+                        jamu: jamu
+                    }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                status.innerText = "✅ Data berhasil disimpan ke Spreadsheet!";
+                status.style.color = "#27ae60";
+                document.getElementById('namaKlien').value = ""; // Kosongkan kolom nama setelah berhasil
+            } catch (error) {
+                console.error('Error!', error.message);
+                status.innerText = "❌ Gagal menyimpan data. Silakan cek koneksi internet Anda.";
+                status.style.color = "#e74c3c";
+            }
         }
 
         window.onload = init;
