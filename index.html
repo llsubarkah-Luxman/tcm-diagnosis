@@ -3,60 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CDSS TCM - AI Pintar Adaptif</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.3/dist/face-landmarks-detection.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.5/dist/teachablemachine-image.min.js"></script>
+    <title>CDSS TCM - Gemini Vision API</title>
     
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 2rem auto; padding: 0 1rem; color: #333; }
         h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
         .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; }
         .opsi-input { background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; font-size: 16px;}
+        button { background: #3498db; color: white; border: none; padding: 12px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; font-size: 16px; transition: background 0.3s;}
         button:hover { background: #2980b9; }
-        .btn-secondary { background: #2ecc71; }
-        .btn-warning { background: #e67e22; }
+        button:disabled { background: #95a5a6; cursor: not-allowed; }
         .anamnesis-panel { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         select, input[type="text"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .checkbox-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .checkbox-group label { background: #f4f4f4; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        #status-ai { text-align: center; color: #e67e22; font-weight: bold; margin-bottom: 10px; }
+        #status-ai { text-align: center; font-weight: bold; margin-bottom: 15px; padding: 10px; border-radius: 5px;}
         .preview-container { display: flex; flex-direction: column; align-items: center; margin-top: 15px; }
-        #canvas-autocrop { border: 3px dashed #3498db; border-radius: 8px; margin-top: 10px; max-width: 250px; }
+        #imgPreview { border-radius: 8px; max-width: 250px; margin-top: 10px; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        
+        /* Loading Animation */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <h2>Asisten CDSS TCM Klinik</h2>
+    <h2>Asisten CDSS TCM (Vision API)</h2>
     
-    <div id="status-ai">⏳ Sedang memuat AI...</div>
+    <div id="status-ai" style="background: #e8f4f8; color: #2980b9;">✅ Sistem Awan (*Cloud*) Siap Digunakan.</div>
 
+    <!-- Modul Anamnesis & Identitas -->
     <div class="anamnesis-panel">
-        <label><strong>1. Pilih Keluhan Utama Klien:</strong></label>
+        <label><strong>1. Nama Lengkap Klien:</strong></label>
+        <input type="text" id="namaKlien" placeholder="Masukkan nama untuk Rekam Medis" style="margin-bottom: 15px;">
+
+        <label><strong>2. Pilih Keluhan Utama Klien:</strong></label>
         <select id="keluhanUtama" onchange="updateGejala()">
             <option value="">-- Pilih Kategori --</option>
             <option value="pencernaan">Gangguan Pencernaan (Maag, Diare, Sembelit)</option>
         </select>
 
         <div id="panelGejala" style="display:none; margin-top: 15px;">
-            <label><strong>2. Centang Gejala Penyerta:</strong></label>
+            <label><strong>3. Centang Gejala Penyerta:</strong></label>
             <div id="daftarGejala" class="checkbox-group"></div>
         </div>
     </div>
 
+    <!-- Input Gambar & Tombol Kirim -->
     <div class="opsi-input">
-        <p style="margin-top:0;"><strong>3. Unggah Foto Lidah (Jarak Jauh / Dekat):</strong></p>
-        <input type="file" id="imageUpload" accept="image/*" onchange="prosesGambarCepat(event)" style="margin-bottom: 10px;">
+        <p style="margin-top:0;"><strong>4. Unggah Foto Lidah:</strong><br><small style="color:#7f8c8d;">Bebas jarak jauh/dekat, AI akan menyesuaikan otomatis.</small></p>
+        <input type="file" id="imageUpload" accept="image/*" onchange="previewGambar(event)" style="margin-bottom: 10px;">
         
-        <div class="preview-container" id="previewAreaAuto" style="display:none;">
-            <p id="teksPreview" style="margin: 0; font-size: 14px; color: #555;">Area Lidah Siap Dianalisis:</p>
-            <canvas id="canvas-autocrop"></canvas>
-            <button class="btn-warning" onclick="prediksiSindrom()">🔍 Analisis Lidah & Keluhan</button>
+        <div class="preview-container">
+            <img id="imgPreview" src="">
         </div>
+
+        <button id="btnProses" onclick="prosesKeGemini()">Kirim & Analisis via AI</button>
     </div>
 
+    <!-- Keluaran Diagnosis -->
     <div id="hasilPanel" class="card" style="display:none;">
         <h3 id="teksDiagnosis" style="color: #e74c3c;">Sindrom Terdeteksi: -</h3>
         <p id="teksPenjelasan" style="font-style: italic; color: #555;"></p>
@@ -67,20 +72,13 @@
             <p style="margin-top:0;"><strong>🏃 Terapi Fisik:</strong> <br><span id="teksFisik">-</span></p>
             <p style="margin-bottom:0;"><strong>🍲 Edukasi Pola Makan:</strong> <br><span id="teksMakanan">-</span></p>
         </div>
-
-        <div id="formRekamMedis" style="margin-top: 20px; border-top: 2px dashed #bdc3c7; padding-top: 15px;">
-            <h4>📝 Simpan ke Rekam Medis</h4>
-            <input type="text" id="namaKlien" placeholder="Masukkan Nama Lengkap Klien">
-            <button class="btn-secondary" onclick="simpanKeSpreadsheet()">💾 Simpan ke Google Sheets</button>
-            <p id="statusSimpan" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
-        </div>
+        <p style="text-align: center; color: #27ae60; font-weight: bold; margin-top: 15px; font-size: 14px;">💾 Data otomatis tersimpan ke Rekam Medis (Google Sheets).</p>
     </div>
 
     <script>
-        const URL = "./"; 
-        const scriptURL = "https://script.google.com/macros/s/AKfycbwt-CJ4MhV5vAs-k6zGyhlU5blKGwhApV3wTNGpLPMI0facy-5Bg0jXLFuI6POspTHa/exec";
-        
-        let tmModel, faceModel, maxPredictions;
+        // Tautan Web App Google Script Kang Luxman
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxh2RJ1gZi79n-shl1cbvV7kgnUg2ho1u-OT8dTHH2VY1zZVq94VBWoRBz_kMK_PgdS/exec";
+        let base64ImageString = "";
 
         const gejalaPenyerta = {
             pencernaan: [
@@ -104,223 +102,112 @@
             } else { panel.style.display = "none"; }
         }
 
-        function getCheckedGejala() {
-            const checkboxes = document.querySelectorAll('#daftarGejala input[type="checkbox"]:checked');
-            return Array.from(checkboxes).map(cb => cb.label); 
-        }
-
-        async function init() {
-            try {
-                const modelURL = URL + "model.json";
-                const metadataURL = URL + "metadata.json";
-                tmModel = await tmImage.load(modelURL, metadataURL);
-                maxPredictions = tmModel.getTotalClasses();
-
-                faceModel = await faceLandmarksDetection.load(
-                    faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
-                );
-                document.getElementById('status-ai').innerText = "✅ Sistem AI Adaptif Siap Digunakan";
-                document.getElementById('status-ai').style.color = "#27ae60";
-            } catch (e) {
-                document.getElementById('status-ai').innerText = "❌ Gagal memuat AI. Pastikan koneksi stabil.";
-                document.getElementById('status-ai').style.color = "#c0392b";
-            }
-        }
-
-        // Tampilkan gambar asli jika wajah tidak utuh
-        function setGambarUtuh(canvasSumber) {
-            const canvasAuto = document.getElementById('canvas-autocrop');
-            canvasAuto.width = canvasSumber.width;
-            canvasAuto.height = canvasSumber.height;
-            const ctxAuto = canvasAuto.getContext('2d');
-            ctxAuto.drawImage(canvasSumber, 0, 0);
-            
-            document.getElementById('teksPreview').innerText = "Area Lidah (Mode Close-up):";
-            document.getElementById('previewAreaAuto').style.display = 'flex';
-            document.getElementById('status-ai').innerText = "✅ Foto Jarak Dekat Siap Diproses.";
-            document.getElementById('status-ai').style.color = "#2980b9";
-        }
-
-        function prosesGambarCepat(event) {
-            document.getElementById('hasilPanel').style.display = 'none';
-            document.getElementById('previewAreaAuto').style.display = 'none';
-            
+        // Kompresi ringan agar upload ke server cepat
+        function previewGambar(event) {
             const file = event.target.files[0];
             if (!file) return;
-
-            document.getElementById('status-ai').innerText = "⚙️ Memindai foto...";
-            document.getElementById('status-ai').style.color = "#e67e22";
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
-                img.onload = async function() {
-                    let maxDim = 800;
+                img.onload = function() {
+                    let maxWidth = 800;
                     let width = img.width;
                     let height = img.height;
 
-                    if (width > maxDim || height > maxDim) {
-                        if (width > height) {
-                            height = Math.round((height * maxDim) / width);
-                            width = maxDim;
-                        } else {
-                            width = Math.round((width * maxDim) / height);
-                            height = maxDim;
-                        }
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
                     }
 
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = width;
-                    tempCanvas.height = height;
-                    const ctx = tempCanvas.getContext('2d');
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    try {
-                        const predictions = await faceModel.estimateFaces({ input: tempCanvas });
-                        
-                        if (predictions.length > 0) {
-                            // WAJAH DITEMUKAN -> AUTO CROP
-                            const annotations = predictions[0].annotations;
-                            const bibirKiri = annotations.lipsLeftInner[0];
-                            const bibirKanan = annotations.lipsRightInner[0];
-                            const bibirAtas = annotations.lipsUpperInner[0];
-                            const bibirBawah = annotations.lipsLowerInner[0];
-
-                            let lebarMulut = bibirKanan[0] - bibirKiri[0];
-                            let tinggiMulut = bibirBawah[1] - bibirAtas[1];
-
-                            let sx = Math.max(0, bibirKiri[0] - (lebarMulut * 0.3)); 
-                            let sy = Math.max(0, bibirAtas[1] - (tinggiMulut * 0.2)); 
-                            let sWidth = lebarMulut * 1.6; 
-                            let sHeight = tinggiMulut * 4.0; 
-
-                            const canvasAuto = document.getElementById('canvas-autocrop');
-                            canvasAuto.width = sWidth;
-                            canvasAuto.height = sHeight;
-                            const ctxAuto = canvasAuto.getContext('2d');
-                            ctxAuto.drawImage(tempCanvas, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
-
-                            document.getElementById('teksPreview').innerText = "Area Lidah (Auto-Crop):";
-                            document.getElementById('previewAreaAuto').style.display = 'flex';
-                            document.getElementById('status-ai').innerText = "✅ Auto-Crop Berhasil!";
-                            document.getElementById('status-ai').style.color = "#27ae60";
-                        } else {
-                            // WAJAH TIDAK DITEMUKAN (TAPI TIDAK ERROR) -> ANGGAP CLOSE UP
-                            setGambarUtuh(tempCanvas);
-                        }
-                    } catch (err) {
-                        // AI WAJAH ERROR (TERLALU DEKAT) -> ANGGAP CLOSE UP
-                        setGambarUtuh(tempCanvas);
-                    }
+                    base64ImageString = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    const imgPreview = document.getElementById('imgPreview');
+                    imgPreview.src = base64ImageString;
+                    imgPreview.style.display = 'block';
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        async function prediksiSindrom() {
-            const kategori = document.getElementById("keluhanUtama").value;
-            if(!kategori) return alert("Silakan pilih Keluhan Utama terlebih dahulu.");
-            
-            const canvasTarget = document.getElementById('canvas-autocrop');
-            const prediction = await tmModel.predict(canvasTarget);
-            
-            let highestProb = 0; let lidahAI = ""; let probScore = 0;
-            for (let i = 0; i < maxPredictions; i++) {
-                if (prediction[i].probability > highestProb) {
-                    highestProb = prediction[i].probability;
-                    lidahAI = prediction[i].className;
-                    probScore = (prediction[i].probability * 100).toFixed(1);
-                }
-            }
-
-            const gejalaMentah = document.querySelectorAll('#daftarGejala input[type="checkbox"]:checked');
-            const gejalaArray = Array.from(gejalaMentah).map(cb => cb.value);
-
-            let judul = `AI Lidah: ${lidahAI} (Keyakinan: ${probScore}%)`;
-            let penjelasan = ""; let titik = ""; let jamu = ""; let fisik = ""; let makanan = "";
-            let sindromAkhir = lidahAI;
-
-            if (highestProb < 0.75) {
-                penjelasan = "⚠️ Menyesuaikan diagnosis berdasarkan keluhan riil. ";
-                if(gejalaArray.includes("diare") || gejalaArray.includes("kembung")) {
-                    sindromAkhir = "Dingin & Lembap (Veto Klinis)";
-                    judul = `Diagnosis Disetel: ${sindromAkhir}`;
-                }
-            }
-
-            if (kategori === "pencernaan") {
-                if (gejalaArray.includes("mual")) {
-                    penjelasan += "Terdapat indikasi Qi Lambung berbalik memicu GERD.";
-                    titik = "Men Jin (66.05) untuk meredakan mual, Si Hua Zhong (77.09) bilat.";
-                    jamu = (sindromAkhir.includes("Panas") || sindromAkhir.includes("Stagnasi")) ? "150mg Kunyit, 200mg Temulawak, 150mg Pegagan (Lindungi lambung)." : "200mg Kunyit, 150mg Jahe Merah, 150mg Temulawak.";
-                    fisik = "Aktivitas ringan, relaksasi; hindari berbaring setelah makan.";
-                    makanan = "Porsi kecil; makanan yang ditoleransi; air putih. Hindari makan sangat banyak atau minum kopi.";
-                } 
-                else if (gejalaArray.includes("sembelit")) {
-                    penjelasan += "Energi pencernaan tidak mampu mendorong sisa metabolisme.";
-                    titik = "Qi Men (33.01), Qi Jiao (33.02) untuk usus besar.";
-                    jamu = (sindromAkhir.includes("Panas") || sindromAkhir.includes("Stagnasi")) ? "200mg Lidah Buaya, 200mg Sambiloto, 100mg Temulawak." : "200mg Kunyit, 300mg Rimpang Kencur.";
-                    fisik = "Jalan kaki, aktivitas fisik, latihan abdominal ringan.";
-                    makanan = "Air cukup, sayur, buah, kacang, biji-bijian. Hindari pola makan rendah serat.";
-                }
-                else if (gejalaArray.includes("diare")) {
-                    penjelasan += "Limpa kehilangan kemampuan memilah cairan murni dan keruh.";
-                    titik = "Chang Men (33.10) spesifik untuk diare/radang usus.";
-                    jamu = (sindromAkhir.includes("Panas") || sindromAkhir.includes("Stagnasi")) ? "200mg Sambiloto, 150mg Kunyit, 150mg Daun Jambu Biji." : "250mg Jahe Merah, 150mg Kunyit, 100mg Kayu Manis.";
-                    fisik = "Istirahat; bukan terapi pijat perut.";
-                    makanan = "Cairan + elektrolit/ORS; makanan mudah ditoleransi. Hindari alkohol dan makanan yang memperburuk gejala.";
-                }
-            }
-
-            document.getElementById('teksDiagnosis').innerText = judul;
-            document.getElementById('teksPenjelasan').innerText = penjelasan;
-            document.getElementById('teksAkupunktur').innerText = titik;
-            document.getElementById('teksJamu').innerText = jamu;
-            document.getElementById('teksFisik').innerText = fisik;
-            document.getElementById('teksMakanan').innerText = makanan;
-            
-            document.getElementById('hasilPanel').style.display = 'block';
-            document.getElementById('hasilPanel').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        async function simpanKeSpreadsheet() {
+        async function prosesKeGemini() {
             const nama = document.getElementById('namaKlien').value;
-            if(!nama) return alert("Silakan isi nama klien terlebih dahulu.");
+            const kategori = document.getElementById("keluhanUtama").value;
             
-            const e_keluhan = document.getElementById('keluhanUtama');
-            const keluhanTeks = e_keluhan.options[e_keluhan.selectedIndex].text;
-            const gejala = getCheckedGejala().join(", "); 
+            if(!nama) return alert("Mohon isi Nama Klien terlebih dahulu.");
+            if(!kategori) return alert("Mohon pilih Keluhan Utama.");
+            if(!base64ImageString) return alert("Mohon unggah foto lidah klien.");
+
+            const keluhanTeks = document.getElementById("keluhanUtama").options[document.getElementById("keluhanUtama").selectedIndex].text;
             
-            const diagnosis = document.getElementById('teksDiagnosis').innerText;
-            const titik = document.getElementById('teksAkupunktur').innerText;
-            const jamu = document.getElementById('teksJamu').innerText;
-            const fisik = document.getElementById('teksFisik').innerText;
-            const makanan = document.getElementById('teksMakanan').innerText;
+            const gejalaMentah = document.querySelectorAll('#daftarGejala input[type="checkbox"]:checked');
+            const gejalaArray = Array.from(gejalaMentah).map(cb => cb.parentNode.innerText.trim());
+            const gejalaTeks = gejalaArray.length > 0 ? gejalaArray.join(", ") : "Tidak ada keluhan penyerta spesifik";
+
+            const btn = document.getElementById('btnProses');
+            const statusBox = document.getElementById('status-ai');
+            const panelHasil = document.getElementById('hasilPanel');
             
-            const status = document.getElementById('statusSimpan');
-            status.innerText = "⏳ Sedang mengirim data...";
-            status.style.color = "#e67e22";
-            
+            btn.disabled = true;
+            btn.innerHTML = "<span class='loader'></span> Sedang membedah gambar & meracik resep...";
+            statusBox.style.background = "#fcf3cf";
+            statusBox.style.color = "#d35400";
+            statusBox.innerHTML = "⏳ AI sedang membaca gambar, harap tunggu sekitar 5-10 detik...";
+            panelHasil.style.display = 'none';
+
+            const payload = {
+                namaKlien: nama,
+                keluhan: keluhanTeks,
+                gejala: gejalaTeks,
+                imageBase64: base64ImageString
+            };
+
             try {
-                await fetch(scriptURL, {
-                    method: 'POST', mode: 'no-cors', 
-                    body: JSON.stringify({
-                        namaKlien: nama, keluhan: keluhanTeks + " | Gejala: " + gejala,
-                        diagnosis: diagnosis, titik: titik, jamu: jamu,
-                        terapiFisik: fisik + " | Edukasi: " + makanan
-                    }),
-                    headers: { 'Content-Type': 'application/json' }
+                // Mengirim data ke Google Apps Script secara asinkron
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    // Gunakan text/plain untuk menghindari pemblokiran CORS dari browser
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
                 });
-                status.innerText = "✅ Rekam Medis Berhasil Tersimpan!";
-                status.style.color = "#27ae60";
-                document.getElementById('namaKlien').value = ""; 
+
+                const hasil = await response.json();
+
+                if(hasil.status === "sukses") {
+                    document.getElementById('teksDiagnosis').innerText = hasil.data.diagnosis;
+                    document.getElementById('teksPenjelasan').innerText = hasil.data.penjelasan;
+                    document.getElementById('teksAkupunktur').innerText = hasil.data.titik;
+                    document.getElementById('teksJamu').innerText = hasil.data.jamu;
+                    document.getElementById('teksFisik').innerText = hasil.data.fisik;
+                    document.getElementById('teksMakanan').innerText = hasil.data.makanan;
+                    
+                    panelHasil.style.display = 'block';
+                    panelHasil.scrollIntoView({ behavior: 'smooth' });
+
+                    statusBox.style.background = "#d4efdf";
+                    statusBox.style.color = "#1e8449";
+                    statusBox.innerHTML = "✅ Analisis Selesai & Data Tersimpan ke Google Sheets!";
+                } else {
+                    alert("AI gagal memproses: " + hasil.pesan);
+                    statusBox.innerHTML = "❌ Terjadi kegagalan saat analisis.";
+                }
+
             } catch (error) {
-                status.innerText = "❌ Gagal menyimpan. Periksa internet.";
-                status.style.color = "#c0392b";
+                console.error(error);
+                alert("Gagal terhubung ke peladen. Periksa koneksi internet.");
+                statusBox.innerHTML = "❌ Gagal terhubung.";
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "Kirim & Analisis via AI";
             }
         }
-        window.onload = init;
     </script>
 </body>
 </html>
