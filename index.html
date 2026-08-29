@@ -38,9 +38,12 @@
         <input type="text" id="namaKlien" placeholder="Masukkan nama untuk Rekam Medis" style="margin-bottom: 15px;">
 
         <label><strong>2. Pilih Keluhan Utama Klien:</strong></label>
-        <select id="keluhanUtama" onchange="updateGejala()">
-            <option value="">-- Pilih Kategori --</option>
-            <option value="pencernaan">Gangguan Pencernaan (Maag, Diare, Sembelit)</option>
+        <select id="keluhanUtama" name="keluhanUtama">
+          <option value="Gangguan Pencernaan (Maag, Diare, Sembelit)">Gangguan Pencernaan (Maag, Diare, Sembelit)</option>
+          <option value="Gangguan Pernapasan (Batuk, Asma, Sesak)">Gangguan Pernapasan (Batuk, Asma, Sesak)</option>
+          <option value="Nyeri Otot & Sendi (Sakit Pinggang, Rematik)">Nyeri Otot & Sendi (Sakit Pinggang, Rematik)</option>
+          <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
+          <option value="Gangguan Neurologis (Sakit Kepala, Vertigo, Stroke)">Gangguan Neurologis (Sakit Kepala, Vertigo, Stroke)</option>
         </select>
 
         <div id="panelGejala" style="display:none; margin-top: 15px;">
