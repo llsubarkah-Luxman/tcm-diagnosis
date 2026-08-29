@@ -147,7 +147,7 @@
             <div id="resMakanan" class="isi-hasil"></div>
         </div>
 
-        <button id="btnWA" class="btn-wa">Kirim Edukasi ke WhatsApp Pasien</button>
+        <button id="btnWA" class="btn-wa">Salin & Kirim WA Pasien</button>
     </div>
 </div>
 
@@ -222,7 +222,7 @@
         };
 
         btnSubmit.disabled = true;
-        btnSubmit.innerHTML = "⏳ Membedah Sindrom & Menyusun Menu Terapi...";
+        btnSubmit.innerHTML = "⏳ Membedah Sindrom Secara Presisi...";
         hasilContainer.style.display = "none";
 
         try {
@@ -268,18 +268,16 @@
 
         const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        // Salin teks otomatis ke memori komputer/HP (Clipboard)
         navigator.clipboard.writeText(teksWA).then(() => {
             console.log("Teks berhasil disalin.");
         }).catch(err => {
             console.error("Gagal menyalin teks", err);
         });
 
-        // Membuka WhatsApp
         let tautanWA = noWa ? `https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA) : `https://wa.me/?text=` + encodeURIComponent(teksWA);
         window.open(tautanWA, '_blank');
         
-        alert("💡 Info: Teks edukasi telah disalin otomatis. Jika pada WhatsApp Web pesan tidak muncul, silakan klik kanan lalu pilih Paste (Ctrl + V).");
+        alert("💡 Info: Teks edukasi telah disalin ke memori perangkat. Jika pesan tidak otomatis terisi di WA, silakan tekan 'Paste' (Tempel) di kolom chat pasien.");
     });
 </script>
 </body>
