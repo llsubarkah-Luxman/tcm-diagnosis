@@ -3,59 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CDSS TCM & Master Tung</title>
-    <!-- Font Kekinian dari Google -->
+    <title>Rekam Medis TCM & Multiterapi</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; line-height: 1.6; }
         .container { max-width: 650px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 25px; font-weight: 700; font-size: 24px; }
         .form-group { margin-bottom: 20px; }
+        .form-row { display: flex; gap: 15px; }
+        .form-col { flex: 1; }
         label { display: block; font-weight: 600; margin-bottom: 8px; color: #2c3e50; font-size: 14px; }
-        input[type="text"], select { width: 100%; padding: 12px; border: 1.5px solid #e1e8ed; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; transition: border-color 0.3s; box-sizing: border-box; }
-        input[type="text"]:focus, select:focus { outline: none; border-color: #3498db; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1.5px solid #e1e8ed; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; box-sizing: border-box; }
         .checkbox-group { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e1e8ed; }
         .checkbox-item { display: flex; align-items: flex-start; margin-bottom: 10px; }
-        .checkbox-item input { margin-top: 4px; margin-right: 12px; transform: scale(1.2); accent-color: #3498db; }
+        .checkbox-item input { margin-top: 4px; margin-right: 12px; transform: scale(1.2); }
         .image-preview { width: 100%; max-height: 300px; object-fit: contain; margin-top: 15px; border-radius: 8px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        
-        button.btn-utama { width: 100%; padding: 14px; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); }
+        button.btn-utama { width: 100%; padding: 14px; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: 0.2s; }
         button.btn-utama:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4); }
-        button.btn-utama:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; box-shadow: none; }
+        button.btn-utama:disabled { background: #bdc3c7; cursor: not-allowed; }
         
-        /* Desain Hasil Modern */
         #hasilContainer { display: none; margin-top: 35px; border-top: 2px dashed #e1e8ed; padding-top: 25px; }
-        .card-hasil { background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .diagnosis-title { color: #e74c3c; font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+        .card-hasil { background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+        .diagnosis-title { color: #e74c3c; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
         .penjelasan { font-style: italic; color: #636e72; font-size: 14px; margin-bottom: 20px; }
-        .section-title { font-weight: 700; font-size: 15px; color: #2c3e50; display: flex; align-items: center; margin-bottom: 10px; }
+        .section-title { font-weight: 700; font-size: 15px; color: #2c3e50; display: flex; align-items: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
         .section-title span { margin-right: 8px; font-size: 18px; }
         .isi-hasil { font-size: 14px; color: #444; margin-bottom: 0; }
         
-        /* Tombol WhatsApp */
-        button.btn-wa { width: 100%; padding: 14px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; transition: 0.2s; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
-        button.btn-wa:hover { background: #20bd5a; transform: translateY(-2px); }
-        
-        .footer-note { text-align: center; font-size: 12px; color: #7f8c8d; margin-top: 20px; }
+        button.btn-wa { width: 100%; padding: 14px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Klinik TCM Digital</h2>
+    <h2>Asisten TCM & Multiterapi</h2>
 
     <form id="formKlinis">
-        <div class="form-group">
-            <label>1. Nama Lengkap Klien:</label>
-            <input type="text" id="namaKlien" placeholder="Contoh: Budi Santoso" required>
-        </div>
-        <div class="form-group">
-            <label>No. WhatsApp Klien (Opsional):</label>
-            <input type="text" id="noWaKlien" placeholder="Contoh: 08123456789" style="font-family: 'Poppins', sans-serif;">
+        <div class="form-row">
+            <div class="form-col">
+                <label>1. NIK (Opsional):</label>
+                <input type="number" id="nikKlien" placeholder="16 digit NIK">
+            </div>
+            <div class="form-col">
+                <label>2. Tensi Darah:</label>
+                <input type="text" id="tensiKlien" placeholder="Contoh: 120/80">
+            </div>
         </div>
 
-        <div class="form-group">
-            <label>2. Pilih Keluhan Utama Klien:</label>
+        <div class="form-row" style="margin-top: 20px;">
+            <div class="form-col">
+                <label>3. Nama Lengkap:</label>
+                <input type="text" id="namaKlien" placeholder="Budi Santoso" required>
+            </div>
+            <div class="form-col">
+                <label>4. No. WhatsApp:</label>
+                <input type="text" id="noWaKlien" placeholder="081234...">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label>5. Pilih Keluhan Utama Klien:</label>
             <select id="keluhanUtama" required>
                 <option value="" disabled selected>-- Pilih Keluhan Utama --</option>
                 <option value="Gangguan Pencernaan (Maag, Diare, Cegukan)">Gangguan Pencernaan (Maag, Diare, Cegukan)</option>
@@ -63,6 +70,7 @@
                 <option value="Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)">Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)</option>
                 <option value="Benjolan & Kelenjar (Tiroid, Lipoma, Ganglion)">Benjolan & Kelenjar (Tiroid, Lipoma, Ganglion)</option>
                 <option value="THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)">THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)</option>
+                <option value="Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)">Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)</option>
                 <option value="Gangguan Reproduksi & Kewanitaan (Haid, Promil)">Gangguan Reproduksi & Kewanitaan (Haid, Promil)</option>
                 <option value="Metabolik & Diet (Gula, Asam Urat, Obesitas)">Metabolik & Diet (Gula, Asam Urat, Obesitas)</option>
                 <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
@@ -72,127 +80,94 @@
         </div>
 
         <div class="form-group">
-            <label>3. Centang Gejala Penyerta:</label>
+            <label>6. Centang Gejala Penyerta:</label>
             <div id="gejalaContainer" class="checkbox-group">
-                <p style="color:#95a5a6; font-size: 13px; margin:0;">Silakan pilih keluhan utama terlebih dahulu.</p>
+                <p style="color:#95a5a6; font-size: 13px; margin:0;">Pilih keluhan utama terlebih dahulu.</p>
             </div>
         </div>
 
         <div class="form-group">
-            <label>4. Unggah Foto Lidah Klien:</label>
-            <input type="file" id="fotoLidah" accept="image/*" required style="font-size: 13px;">
+            <label>7. Unggah Foto Lidah Klien:</label>
+            <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
             <img id="previewGambar" class="image-preview" alt="Preview Lidah">
         </div>
 
         <button type="submit" id="btnSubmit" class="btn-utama">Kirim & Analisis via AI</button>
     </form>
 
-    <!-- AREA HASIL DIAGNOSIS -->
     <div id="hasilContainer">
-        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">Laporan Rekam Medis</h3>
+        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">Laporan & Opsi Terapi</h3>
         
         <div class="card-hasil">
             <div class="diagnosis-title" id="resDiagnosis"></div>
             <div class="penjelasan" id="resPenjelasan"></div>
         </div>
         
-        <div class="card-hasil" style="border-left: 4px solid #9b59b6;">
-            <div class="section-title"><span>🎯</span> Titik Master Tung (Khusus Terapis):</div>
-            <div id="resTitik" class="isi-hasil"></div>
-        </div>
+        <!-- Area Opsi Terapi Klinis -->
+        <h4 style="color: #34495e; margin-bottom: 10px;">📋 Pilihan Modalitas Terapi (Untuk Praktisi)</h4>
         
-        <div class="card-hasil" style="border-left: 4px solid #27ae60;">
-            <div class="section-title"><span>🌿</span> Formula Jamu (Saran Resep):</div>
-            <div id="resJamu" class="isi-hasil"></div>
-        </div>
-        
-        <div class="card-hasil" style="border-left: 4px solid #e67e22;">
-            <div class="section-title"><span>💆</span> Terapi Mandiri & Fisik:</div>
-            <div id="resFisik" class="isi-hasil"></div>
+        <div class="card-hasil" style="border-left: 4px solid #e74c3c;">
+            <div class="section-title"><span>🎯</span> Akupunktur Master Tung:</div>
+            <div id="resTung" class="isi-hasil"></div>
         </div>
         
         <div class="card-hasil" style="border-left: 4px solid #3498db;">
-            <div class="section-title"><span>🥗</span> Edukasi Pola Makan:</div>
+            <div class="section-title"><span>⚖️</span> Keseimbangan Dr. Tan:</div>
+            <div id="resTan" class="isi-hasil"></div>
+        </div>
+
+        <div class="card-hasil" style="border-left: 4px solid #9b59b6;">
+            <div class="section-title"><span>🧠</span> Scalp Yamamoto (YNSA):</div>
+            <div id="resYamamoto" class="isi-hasil"></div>
+        </div>
+
+        <div class="card-hasil" style="border-left: 4px solid #f39c12;">
+            <div class="section-title"><span>🤲</span> Terapi Tuina:</div>
+            <div id="resTuina" class="isi-hasil"></div>
+        </div>
+
+        <div class="card-hasil" style="border-left: 4px solid #c0392b;">
+            <div class="section-title"><span>🔴</span> Terapi Bekam:</div>
+            <div id="resBekam" class="isi-hasil"></div>
+        </div>
+        
+        <!-- Area Saran Pasien -->
+        <h4 style="color: #34495e; margin-top: 25px; margin-bottom: 10px;">🏠 Resep & Edukasi (Untuk Pasien)</h4>
+
+        <div class="card-hasil" style="border-left: 4px solid #27ae60;">
+            <div class="section-title"><span>🌿</span> Saran Jamu Herbal:</div>
+            <div id="resJamu" class="isi-hasil"></div>
+        </div>
+
+        <div class="card-hasil" style="border-left: 4px solid #1abc9c;">
+            <div class="section-title"><span>🏃</span> Terapi Gerak (Olahraga):</div>
+            <div id="resGerak" class="isi-hasil"></div>
+        </div>
+        
+        <div class="card-hasil" style="border-left: 4px solid #d35400;">
+            <div class="section-title"><span>🥗</span> Terapi Makanan (Panas & Dingin):</div>
             <div id="resMakanan" class="isi-hasil"></div>
         </div>
 
-        <!-- Tombol Bagikan ke Pasien -->
-        <button id="btnWA" class="btn-wa">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
-            Kirim Saran Medis ke Pasien (WA)
-        </button>
-
-        <div class="footer-note">💾 Data otomatis tersimpan ke Rekam Medis (Google Sheets).</div>
+        <button id="btnWA" class="btn-wa">Kirim Edukasi ke WhatsApp Pasien</button>
     </div>
 </div>
 
 <script>
-    // --- DATABASE GEJALA DINAMIS ---
     const dataGejala = {
-        "Gangguan Pencernaan (Maag, Diare, Cegukan)": [
-            "Mual / Asam Lambung Naik (GERD)",
-            "Perut Kembung / Banyak Gas",
-            "Diare / BAB Cair (Lebih dari 3x sehari)",
-            "Cegukan / Sendawa Terus-Menerus",
-            "Sembelit / BAB Keras atau Sulit"
-        ],
-        "Gangguan Pernapasan (Batuk, Asma, Sesak)": [
-            "Batuk Kering / Tidak Berdahak",
-            "Batuk Berdahak (Putih/Kuning/Hijau)",
-            "Sesak Napas / Mengi (Asma)",
-            "Sakit Tenggorokan / Kering"
-        ],
-        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": [
-            "Nyeri/Kaku Jari Tangan (Trigger Finger/Menyetir)",
-            "Nyeri Tumit / Engkel (Akibat Benturan/Trauma)",
-            "Nyeri Pinggang Belakang / Kecetit",
-            "Kaku Leher, Pundak, atau Lutut"
-        ],
-        "Benjolan & Kelenjar (Tiroid, Lipoma, Ganglion)": [
-            "Bengkak di area Leher (Tiroid / Gondok)",
-            "Benjolan Lunak di Bawah Kulit (Lipoma)",
-            "Benjolan Keras di Area Sendi (Ganglion)",
-            "Benjolan Terasa Nyeri / Memerah saat Ditekan"
-        ],
-        "THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)": [
-            "Biduran / Kaligata Terus-menerus (Urtikaria)",
-            "Ruam Gatal / Eksim di Kulit",
-            "Hidung Mampet / Bersin Pagi (Sinusitis)",
-            "Telinga Berdenging (Tinnitus)"
-        ],
-        "Gangguan Reproduksi & Kewanitaan (Haid, Promil)": [
-            "Nyeri Haid Hebat / Darah Menggumpal",
-            "Siklus Tidak Teratur / Program Hamil",
-            "Sensasi Panas (Hot Flashes) / Menopause",
-            "Keputihan Abnormal / Gatal"
-        ],
-        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": [
-            "Kelebihan Berat Badan / Ingin Program Diet",
-            "Tensi Tinggi / Tengkuk Terasa Berat",
-            "Sering Haus & Lapar (Indikasi Gula Tinggi)",
-            "Nyeri Berdenyut & Kemerahan (Asam Urat)"
-        ],
-        "Gangguan Tidur & Emosi (Insomnia, Stres)": [
-            "Sulit Memulai Tidur / Insomnia",
-            "Sering Terbangun Tengah Malam",
-            "Gelisah / Mudah Marah / Stres Cemas",
-            "Dada Sering Berdebar (Palpitasi)"
-        ],
-        "Gangguan Neurologis (Sakit Kepala, Vertigo)": [
-            "Sakit Kepala Pusing Berputar (Vertigo)",
-            "Sakit Kepala Sebelah (Migrain)",
-            "Kelemahan Anggota Gerak (Pasca Stroke)",
-            "Gemetar Tidak Terkontrol (Tremor)"
-        ],
-        "Sindrom Kelelahan & Penurunan Imun": [
-            "Badan Terasa Sangat Berat / Lemas Berkepanjangan",
-            "Napas Pendek / Mudah Ngos-ngosan",
-            "Keringat Dingin Keluar Sendiri",
-            "Nafsu Makan Menurun Drastis / Wajah Pucat"
-        ]
+        "Gangguan Pencernaan (Maag, Diare, Cegukan)": ["Mual / Asam Lambung Naik", "Perut Kembung", "Diare (>3x sehari)", "Cegukan / Sendawa", "Sembelit"],
+        "Gangguan Pernapasan (Batuk, Asma, Sesak)": ["Batuk Kering", "Batuk Berdahak", "Sesak Napas / Mengi", "Sakit Tenggorokan"],
+        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": ["Nyeri/Kaku Jari Tangan", "Nyeri Tumit / Engkel", "Nyeri Pinggang", "Kaku Leher/Pundak"],
+        "Benjolan & Kelenjar (Tiroid, Lipoma, Ganglion)": ["Bengkak Leher (Tiroid)", "Benjolan Lunak (Lipoma)", "Benjolan Keras Sendi", "Benjolan Nyeri"],
+        "THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)": ["Biduran / Kaligata", "Ruam Gatal", "Hidung Mampet (Sinus)", "Telinga Berdenging"],
+        "Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)": ["Penurunan Visus (Minus/Plus)", "Mata Merah/Kering", "Mata Berkabut (Katarak)", "Tekanan Mata Tinggi (Glaukoma)"],
+        "Gangguan Reproduksi & Kewanitaan (Haid, Promil)": ["Nyeri Haid Hebat", "Siklus Tidak Teratur", "Sensasi Panas (Menopause)", "Keputihan Abnormal"],
+        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": ["Ingin Program Diet", "Tengkuk Terasa Berat", "Sering Haus & Lapar", "Nyeri Sendi Kemerahan"],
+        "Gangguan Tidur & Emosi (Insomnia, Stres)": ["Sulit Memulai Tidur", "Terbangun Tengah Malam", "Mudah Marah / Cemas", "Dada Berdebar"],
+        "Gangguan Neurologis (Sakit Kepala, Vertigo)": ["Pusing Berputar (Vertigo)", "Sakit Kepala Sebelah", "Kelemahan Anggota Gerak", "Gemetar (Tremor)"],
+        "Sindrom Kelelahan & Penurunan Imun": ["Badan Sangat Berat", "Mudah Ngos-ngosan", "Keringat Dingin Keluar Sendiri", "Nafsu Makan Menurun"]
     };
 
-    // --- LOGIKA GEJALA DINAMIS ---
     const keluhanSelect = document.getElementById('keluhanUtama');
     const gejalaContainer = document.getElementById('gejalaContainer');
 
@@ -202,15 +177,11 @@
         gejalaList.forEach(gejala => {
             const div = document.createElement('div');
             div.className = 'checkbox-item';
-            div.innerHTML = `
-                <input type="checkbox" name="gejala" value="${gejala}">
-                <label style="margin:0; font-weight:normal;">${gejala}</label>
-            `;
+            div.innerHTML = `<input type="checkbox" name="gejala" value="${gejala}"><label style="margin:0; font-weight:normal;">${gejala}</label>`;
             gejalaContainer.appendChild(div);
         });
     });
 
-    // --- PREVIEW GAMBAR ---
     const fotoInput = document.getElementById('fotoLidah');
     const previewGambar = document.getElementById('previewGambar');
     let imageBase64Data = "";
@@ -228,31 +199,32 @@
         }
     });
 
-    // --- PENGIRIMAN DATA KE GOOGLE SCRIPT ---
     const formKlinis = document.getElementById('formKlinis');
     const btnSubmit = document.getElementById('btnSubmit');
     const hasilContainer = document.getElementById('hasilContainer');
-    let dataPasienTerakhir = {}; // Simpan data untuk dikirim ke WA
+    let dataPasienTerakhir = {}; 
 
-    // ⚠️⚠️⚠️ GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT AKANG ⚠️⚠️⚠️
+    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT TERBARU DI SINI
     const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
 
     formKlinis.addEventListener('submit', async function(e) {
         e.preventDefault();
         if (!imageBase64Data) return alert("Harap unggah foto lidah!");
 
-        const gejalaChecked = Array.from(document.querySelectorAll('input[name="gejala"]:checked'))
-                                   .map(cb => cb.value).join(', ');
+        const gejalaChecked = Array.from(document.querySelectorAll('input[name="gejala"]:checked')).map(cb => cb.value).join(', ');
 
         const payload = {
+            nik: document.getElementById('nikKlien').value,
             namaKlien: document.getElementById('namaKlien').value,
+            noWa: document.getElementById('noWaKlien').value,
+            tensi: document.getElementById('tensiKlien').value,
             keluhan: document.getElementById('keluhanUtama').value,
             gejala: gejalaChecked || "Tidak ada gejala spesifik",
             imageBase64: imageBase64Data
         };
 
         btnSubmit.disabled = true;
-        btnSubmit.innerHTML = "⏳ Sedang membedah gambar & meracik resep...";
+        btnSubmit.innerHTML = "⏳ Membedah Sindrom & Menyusun Menu Terapi...";
         hasilContainer.style.display = "none";
 
         try {
@@ -262,54 +234,48 @@
             if (result.status === "sukses") {
                 document.getElementById('resDiagnosis').innerText = result.data.diagnosis;
                 document.getElementById('resPenjelasan').innerText = result.data.penjelasan;
-                document.getElementById('resTitik').innerHTML = result.data.titik.replace(/\n/g, '<br>');
+                document.getElementById('resTung').innerHTML = result.data.tung.replace(/\n/g, '<br>');
+                document.getElementById('resTan').innerHTML = result.data.tan.replace(/\n/g, '<br>');
+                document.getElementById('resYamamoto').innerHTML = result.data.yamamoto.replace(/\n/g, '<br>');
+                document.getElementById('resTuina').innerHTML = result.data.tuina.replace(/\n/g, '<br>');
+                document.getElementById('resBekam').innerHTML = result.data.bekam.replace(/\n/g, '<br>');
                 document.getElementById('resJamu').innerHTML = result.data.jamu.replace(/\n/g, '<br>');
-                document.getElementById('resFisik').innerHTML = result.data.fisik.replace(/\n/g, '<br>');
+                document.getElementById('resGerak').innerHTML = result.data.gerak.replace(/\n/g, '<br>');
                 document.getElementById('resMakanan').innerHTML = result.data.makanan.replace(/\n/g, '<br>');
                 
-                // Simpan untuk WhatsApp
                 dataPasienTerakhir = {
                     nama: payload.namaKlien,
+                    tensi: payload.tensi,
                     diagnosis: result.data.diagnosis,
                     jamu: result.data.jamu,
-                    fisik: result.data.fisik,
+                    gerak: result.data.gerak,
                     makanan: result.data.makanan
                 };
-
                 hasilContainer.style.display = "block"; 
             } else {
                 alert("Gagal memproses: " + result.pesan);
             }
         } catch (error) {
-            alert("Kesibukan Server / Terjadi Kesalahan. Silakan coba klik tombol kirim lagi dalam beberapa detik.");
+            alert("Kesibukan Server. Silakan klik tombol kirim lagi.");
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.innerHTML = "Kirim & Analisis via AI";
         }
     });
 
-// --- FITUR BAGIKAN KE WHATSAPP PASIEN ---
     document.getElementById('btnWA').addEventListener('click', function() {
         let noWa = document.getElementById('noWaKlien').value;
-        
-        // Format nomor WA (ubah awalan 0 menjadi 62)
-        if (noWa.startsWith('0')) {
-            noWa = '62' + noWa.substring(1);
-        }
-        // Bersihkan karakter selain angka (seperti spasi atau tanda strip)
+        if (noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
         noWa = noWa.replace(/\D/g, '');
 
-        const teksWA = `*HASIL KONSULTASI TCM*\nKlinik Akupunktur Master Tung\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n\n*🌿 Saran Herbal/Jamu:*\n${dataPasienTerakhir.jamu}\n\n*💆 Saran Terapi Mandiri:*\n${dataPasienTerakhir.fisik}\n\n*🥗 Edukasi Pola Makan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
+        const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n*Diagnosis TCM:* ${dataPasienTerakhir.diagnosis}\n\n*🌿 Saran Jamu Herbal:*\n${dataPasienTerakhir.jamu}\n\n*🏃 Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan (Panas/Dingin):*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        // Buat tautan cerdas (jika ada nomor, langsung buka chat-nya. Jika kosong, buka kontak)
         let tautanWA = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(teksWA);
         if (noWa) {
             tautanWA = 'https://api.whatsapp.com/send?phone=' + noWa + '&text=' + encodeURIComponent(teksWA);
         }
-        
         window.open(tautanWA, '_blank');
     });
 </script>
-
 </body>
 </html>
