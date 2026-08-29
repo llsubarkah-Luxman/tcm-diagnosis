@@ -57,7 +57,7 @@
             </div>
             <div class="form-col">
                 <label>4. No. WhatsApp:</label>
-                <input type="text" id="noWaKlien" placeholder="081234...">
+                <input type="number" id="noWaKlien" placeholder="081234...">
             </div>
         </div>
 
@@ -103,7 +103,6 @@
             <div class="penjelasan" id="resPenjelasan"></div>
         </div>
         
-        <!-- Area Opsi Terapi Klinis -->
         <h4 style="color: #34495e; margin-bottom: 10px;">📋 Pilihan Modalitas Terapi (Untuk Praktisi)</h4>
         
         <div class="card-hasil" style="border-left: 4px solid #e74c3c;">
@@ -131,13 +130,12 @@
             <div id="resBekam" class="isi-hasil"></div>
         </div>
         
-        <!-- Area Saran Pasien -->
-        <h4 style="color: #34495e; margin-top: 25px; margin-bottom: 10px;">🏠 Resep & Edukasi (Untuk Pasien)</h4>
-
         <div class="card-hasil" style="border-left: 4px solid #27ae60;">
-            <div class="section-title"><span>🌿</span> Saran Jamu Herbal:</div>
+            <div class="section-title"><span>🌿</span> Jamu / Kapsul Herbal:</div>
             <div id="resJamu" class="isi-hasil"></div>
         </div>
+        
+        <h4 style="color: #34495e; margin-top: 25px; margin-bottom: 10px;">🏠 Edukasi (Untuk Pasien)</h4>
 
         <div class="card-hasil" style="border-left: 4px solid #1abc9c;">
             <div class="section-title"><span>🏃</span> Terapi Gerak (Olahraga):</div>
@@ -204,7 +202,7 @@
     const hasilContainer = document.getElementById('hasilContainer');
     let dataPasienTerakhir = {}; 
 
-    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT TERBARU DI SINI
+    // URL Web App
     const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
 
     formKlinis.addEventListener('submit', async function(e) {
@@ -247,7 +245,7 @@
                     nama: payload.namaKlien,
                     tensi: payload.tensi,
                     diagnosis: result.data.diagnosis,
-                    jamu: result.data.jamu,
+                    penjelasan: result.data.penjelasan,
                     gerak: result.data.gerak,
                     makanan: result.data.makanan
                 };
@@ -266,14 +264,17 @@
     document.getElementById('btnWA').addEventListener('click', function() {
         let noWa = document.getElementById('noWaKlien').value;
         if (noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
-        noWa = noWa.replace(/\D/g, '');
+        noWa = noWa.replace(/\D/g, ''); // Bersihkan dari karakter non-angka
 
-        const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n*Diagnosis TCM:* ${dataPasienTerakhir.diagnosis}\n\n*🌿 Saran Jamu Herbal:*\n${dataPasienTerakhir.jamu}\n\n*🏃 Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan (Panas/Dingin):*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
+        // Format pesan baru tanpa Jamu dan dengan Penjelasan Sindrom
+        const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        let tautanWA = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(teksWA);
+        // Menggunakan tautan wa.me/ agar lebih responsif di WhatsApp Web maupun HP
+        let tautanWA = 'https://wa.me/?text=' + encodeURIComponent(teksWA);
         if (noWa) {
-            tautanWA = 'https://api.whatsapp.com/send?phone=' + noWa + '&text=' + encodeURIComponent(teksWA);
+            tautanWA = 'https://wa.me/' + noWa + '?text=' + encodeURIComponent(teksWA);
         }
+        
         window.open(tautanWA, '_blank');
     });
 </script>
