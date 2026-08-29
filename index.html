@@ -49,6 +49,10 @@
             <label>1. Nama Lengkap Klien:</label>
             <input type="text" id="namaKlien" placeholder="Contoh: Budi Santoso" required>
         </div>
+        <div class="form-group">
+            <label>No. WhatsApp Klien (Opsional):</label>
+            <input type="text" id="noWaKlien" placeholder="Contoh: 08123456789" style="font-family: 'Poppins', sans-serif;">
+        </div>
 
         <div class="form-group">
             <label>2. Pilih Keluhan Utama Klien:</label>
@@ -284,12 +288,26 @@
         }
     });
 
-    // --- FITUR BAGIKAN KE WHATSAPP PASIEN ---
+// --- FITUR BAGIKAN KE WHATSAPP PASIEN ---
     document.getElementById('btnWA').addEventListener('click', function() {
+        let noWa = document.getElementById('noWaKlien').value;
+        
+        // Format nomor WA (ubah awalan 0 menjadi 62)
+        if (noWa.startsWith('0')) {
+            noWa = '62' + noWa.substring(1);
+        }
+        // Bersihkan karakter selain angka (seperti spasi atau tanda strip)
+        noWa = noWa.replace(/\D/g, '');
+
         const teksWA = `*HASIL KONSULTASI TCM*\nKlinik Akupunktur Master Tung\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n\n*🌿 Saran Herbal/Jamu:*\n${dataPasienTerakhir.jamu}\n\n*💆 Saran Terapi Mandiri:*\n${dataPasienTerakhir.fisik}\n\n*🥗 Edukasi Pola Makan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        // Membuka tab WhatsApp Web / Aplikasi WA
-        window.open('https://wa.me/?text=' + encodeURIComponent(teksWA), '_blank');
+        // Buat tautan cerdas (jika ada nomor, langsung buka chat-nya. Jika kosong, buka kontak)
+        let tautanWA = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(teksWA);
+        if (noWa) {
+            tautanWA = 'https://api.whatsapp.com/send?phone=' + noWa + '&text=' + encodeURIComponent(teksWA);
+        }
+        
+        window.open(tautanWA, '_blank');
     });
 </script>
 
