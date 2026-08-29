@@ -22,6 +22,12 @@
         button.btn-utama:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4); }
         button.btn-utama:disabled { background: #bdc3c7; cursor: not-allowed; }
         
+        /* Desain Search Box */
+        .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #d1e8f0; }
+        .search-box h4 { margin-top: 0; color: #2980b9; margin-bottom: 10px; font-size: 15px; }
+        .history-card { background: #fff; padding: 10px 15px; margin-top: 10px; border-left: 3px solid #3498db; border-radius: 4px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .history-date { font-weight: bold; color: #7f8c8d; font-size: 11px; margin-bottom: 4px; display: block; }
+        
         #hasilContainer { display: none; margin-top: 35px; border-top: 2px dashed #e1e8ed; padding-top: 25px; }
         .card-hasil { background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
         .diagnosis-title { color: #e74c3c; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
@@ -29,16 +35,28 @@
         .section-title { font-weight: 700; font-size: 15px; color: #2c3e50; display: flex; align-items: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
         .section-title span { margin-right: 8px; font-size: 18px; }
         .isi-hasil { font-size: 14px; color: #444; margin-bottom: 0; }
-        
         button.btn-wa { width: 100%; padding: 14px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Asisten TCM & Multiterapi</h2>
+    <h2>Klinik TCM & Multiterapi</h2>
 
+    <!-- PANEL PENCARIAN PASIEN LAMA -->
+    <div class="search-box">
+        <h4>🔍 Cari Riwayat Pasien Lama</h4>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="inputSearch" placeholder="Ketik NIK atau Nama Pasien..." style="flex: 1; padding: 10px;">
+            <button type="button" id="btnSearch" class="btn-utama" style="width: 80px; padding: 10px;">Cari</button>
+        </div>
+        <div id="searchResults"></div>
+    </div>
+
+    <!-- FORM INPUT PASIEN BARU/LAMA -->
     <form id="formKlinis">
+        <h4 style="color: #2c3e50; border-bottom: 2px solid #e1e8ed; padding-bottom: 5px; margin-bottom: 20px;">📝 Form Rekam Medis (Hari Ini)</h4>
+        
         <div class="form-row">
             <div class="form-col">
                 <label>1. NIK (Opsional):</label>
@@ -197,13 +215,54 @@
         }
     });
 
+    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT TERBARU DI SINI
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
+
+    // --- LOGIKA PENCARIAN PASIEN LAMA ---
+    document.getElementById('btnSearch').addEventListener('click', async function() {
+        const keyword = document.getElementById('inputSearch').value;
+        if(!keyword) return alert("Silakan masukkan NIK atau Nama pasien terlebih dahulu!");
+
+        const btn = document.getElementById('btnSearch');
+        const resDiv = document.getElementById('searchResults');
+        
+        btn.innerText = "⏳";
+        btn.disabled = true;
+        resDiv.innerHTML = "<p style='font-size:13px; color:#7f8c8d;'>Mencari data di rekam medis...</p>";
+
+        try {
+            const payload = { action: "search", searchKey: keyword };
+            const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await response.json();
+
+            if (result.status === "sukses" && result.data.length > 0) {
+                let html = '';
+                result.data.forEach(r => {
+                    let tgl = new Date(r.waktu).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'});
+                    html += `<div class="history-card">
+                                <span class="history-date">📅 Kunjungan: ${tgl}</span>
+                                <b>👤 ${r.nama}</b> (NIK: ${r.nik})<br>
+                                <span style="color:#e74c3c">Keluhan:</span> ${r.keluhan} - ${r.gejala}<br>
+                                <span style="color:#2980b9">Diagnosis:</span> ${r.diagnosis}
+                             </div>`;
+                });
+                resDiv.innerHTML = html;
+            } else {
+                resDiv.innerHTML = '<p style="color: #e74c3c; font-size: 13px;">❌ Data pasien tidak ditemukan.</p>';
+            }
+        } catch(e) {
+            resDiv.innerHTML = '<p style="color: #e74c3c; font-size: 13px;">Gagal memuat data. Periksa koneksi.</p>';
+        } finally {
+            btn.innerText = "Cari";
+            btn.disabled = false;
+        }
+    });
+
+    // --- LOGIKA INPUT & AI ---
     const formKlinis = document.getElementById('formKlinis');
     const btnSubmit = document.getElementById('btnSubmit');
     const hasilContainer = document.getElementById('hasilContainer');
     let dataPasienTerakhir = {}; 
-
-    // URL Web App
-    const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
 
     formKlinis.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -212,6 +271,7 @@
         const gejalaChecked = Array.from(document.querySelectorAll('input[name="gejala"]:checked')).map(cb => cb.value).join(', ');
 
         const payload = {
+            action: "insert", // Menandakan ini untuk input baru
             nik: document.getElementById('nikKlien').value,
             namaKlien: document.getElementById('namaKlien').value,
             noWa: document.getElementById('noWaKlien').value,
@@ -261,6 +321,7 @@
         }
     });
 
+    // --- LOGIKA WA ---
     document.getElementById('btnWA').addEventListener('click', function() {
         let noWa = document.getElementById('noWaKlien').value;
         if (noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
