@@ -264,15 +264,20 @@
     document.getElementById('btnWA').addEventListener('click', function() {
         let noWa = document.getElementById('noWaKlien').value;
         if (noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
-        noWa = noWa.replace(/\D/g, ''); // Bersihkan dari karakter non-angka
+        noWa = noWa.replace(/\D/g, ''); // Bersihkan karakter non-angka
 
-        // Format pesan baru tanpa Jamu dan dengan Penjelasan Sindrom
+        // Format pesan TANPA jamu dan ADA penjelasan sindrom
         const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        // Menggunakan tautan wa.me/ agar lebih responsif di WhatsApp Web maupun HP
-        let tautanWA = 'https://wa.me/?text=' + encodeURIComponent(teksWA);
+        // Deteksi apakah dibuka di HP atau Laptop
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Jika di laptop gunakan web.whatsapp.com agar langsung tembus tanpa klik lanjutan
+        let baseUrl = isMobile ? 'https://api.whatsapp.com/send' : 'https://web.whatsapp.com/send';
+        
+        let tautanWA = baseUrl + '?text=' + encodeURIComponent(teksWA);
         if (noWa) {
-            tautanWA = 'https://wa.me/' + noWa + '?text=' + encodeURIComponent(teksWA);
+            tautanWA = baseUrl + '?phone=' + noWa + '&text=' + encodeURIComponent(teksWA);
         }
         
         window.open(tautanWA, '_blank');
