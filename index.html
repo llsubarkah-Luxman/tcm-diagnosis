@@ -4,213 +4,229 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CDSS TCM - Gemini Vision API</title>
-    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 2rem auto; padding: 0 1rem; color: #333; }
-        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
-        .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; }
-        .opsi-input { background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        button { background: #3498db; color: white; border: none; padding: 12px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; font-size: 16px; transition: background 0.3s;}
-        button:hover { background: #2980b9; }
-        button:disabled { background: #95a5a6; cursor: not-allowed; }
-        .anamnesis-panel { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        select, input[type="text"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .checkbox-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-        .checkbox-group label { background: #f4f4f4; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        #status-ai { text-align: center; font-weight: bold; margin-bottom: 15px; padding: 10px; border-radius: 5px;}
-        .preview-container { display: flex; flex-direction: column; align-items: center; margin-top: 15px; }
-        #imgPreview { border-radius: 8px; max-width: 250px; margin-top: 10px; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #444; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .checkbox-group { background: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee; }
+        .checkbox-item { display: flex; align-items: center; margin-bottom: 8px; }
+        .checkbox-item input { margin-right: 10px; width: 18px; height: 18px; }
+        .image-preview { width: 100%; max-height: 300px; object-fit: contain; margin-top: 10px; border-radius: 5px; display: none; background: #000; }
+        button { width: 100%; padding: 15px; background-color: #3498db; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background-color: #2980b9; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
         
-        /* Loading Animation */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Area Hasil Diagnosis */
+        #hasilContainer { display: none; margin-top: 30px; padding: 20px; background-color: #fdfbf7; border: 1px solid #e0dcd3; border-radius: 8px; }
+        .diagnosis-title { color: #e74c3c; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .penjelasan { font-style: italic; color: #555; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
+        .section-title { font-weight: bold; margin-top: 15px; display: flex; align-items: center; }
+        .section-title span { margin-right: 8px; }
+        .footer-note { text-align: center; font-size: 12px; color: #27ae60; margin-top: 25px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>Asisten CDSS TCM (Vision API)</h2>
-    
-    <div id="status-ai" style="background: #e8f4f8; color: #2980b9;">✅ Sistem Awan (*Cloud*) Siap Digunakan.</div>
+<div class="container">
+    <h2>Asisten CDSS TCM & Master Tung</h2>
 
-    <!-- Modul Anamnesis & Identitas -->
-    <div class="anamnesis-panel">
-        <label><strong>1. Nama Lengkap Klien:</strong></label>
-        <input type="text" id="namaKlien" placeholder="Masukkan nama untuk Rekam Medis" style="margin-bottom: 15px;">
-
-        <label><strong>2. Pilih Keluhan Utama Klien:</strong></label>
-        <select id="keluhanUtama" name="keluhanUtama">
-          <option value="Gangguan Pencernaan (Maag, Diare, Sembelit)">Gangguan Pencernaan (Maag, Diare, Sembelit)</option>
-          <option value="Gangguan Pernapasan (Batuk, Asma, Sesak)">Gangguan Pernapasan (Batuk, Asma, Sesak)</option>
-          <option value="Nyeri Otot & Sendi (Sakit Pinggang, Rematik)">Nyeri Otot & Sendi (Sakit Pinggang, Rematik)</option>
-          <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
-          <option value="Gangguan Neurologis (Sakit Kepala, Vertigo, Stroke)">Gangguan Neurologis (Sakit Kepala, Vertigo, Stroke)</option>
-        </select>
-
-        <div id="panelGejala" style="display:none; margin-top: 15px;">
-            <label><strong>3. Centang Gejala Penyerta:</strong></label>
-            <div id="daftarGejala" class="checkbox-group"></div>
+    <form id="formKlinis">
+        <div class="form-group">
+            <label>1. Nama Lengkap Klien:</label>
+            <input type="text" id="namaKlien" placeholder="Contoh: Budi Santoso" required>
         </div>
-    </div>
 
-    <!-- Input Gambar & Tombol Kirim -->
-    <div class="opsi-input">
-        <p style="margin-top:0;"><strong>4. Unggah Foto Lidah:</strong><br><small style="color:#7f8c8d;">Bebas jarak jauh/dekat, AI akan menyesuaikan otomatis.</small></p>
-        <input type="file" id="imageUpload" accept="image/*" onchange="previewGambar(event)" style="margin-bottom: 10px;">
+        <div class="form-group">
+            <label>2. Pilih Keluhan Utama Klien:</label>
+            <select id="keluhanUtama" required>
+                <option value="" disabled selected>-- Pilih Keluhan --</option>
+                <option value="Gangguan Pencernaan (Maag, Diare, Sembelit)">Gangguan Pencernaan (Maag, Diare, Sembelit)</option>
+                <option value="Gangguan Pernapasan (Batuk, Asma, Sesak)">Gangguan Pernapasan (Batuk, Asma, Sesak)</option>
+                <option value="Nyeri Otot & Sendi (Sakit Pinggang, Rematik)">Nyeri Otot & Sendi (Sakit Pinggang, Rematik)</option>
+                <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
+                <option value="Gangguan Neurologis (Sakit Kepala, Vertigo, Stroke)">Gangguan Neurologis (Sakit Kepala, Vertigo, Stroke)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>3. Centang Gejala Penyerta:</label>
+            <div id="gejalaContainer" class="checkbox-group">
+                <p style="color:#7f8c8d; font-size: 14px; margin:0;">Silakan pilih keluhan utama terlebih dahulu.</p>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>4. Unggah Foto Lidah:</label>
+            <p style="font-size: 12px; color: #777; margin-top: -5px;">Bebas jarak jauh/dekat, AI akan menyesuaikan otomatis.</p>
+            <input type="file" id="fotoLidah" accept="image/*" required>
+            <img id="previewGambar" class="image-preview" alt="Preview Lidah">
+        </div>
+
+        <button type="submit" id="btnSubmit">Kirim & Analisis via AI</button>
+    </form>
+
+    <!-- Area untuk menampilkan hasil dari AI -->
+    <div id="hasilContainer">
+        <div class="diagnosis-title" id="resDiagnosis"></div>
+        <div class="penjelasan" id="resPenjelasan"></div>
         
-        <div class="preview-container">
-            <img id="imgPreview" src="">
-        </div>
+        <div class="section-title"><span>🎯</span> Titik Akupunktur Master Tung:</div>
+        <div id="resTitik"></div>
+        
+        <div class="section-title"><span>💊</span> Formula Kapsul Jamu (500mg):</div>
+        <div id="resJamu"></div>
+        
+        <div class="section-title"><span>🏃</span> Terapi Fisik:</div>
+        <div id="resFisik"></div>
+        
+        <div class="section-title"><span>🥗</span> Edukasi Pola Makan:</div>
+        <div id="resMakanan"></div>
 
-        <button id="btnProses" onclick="prosesKeGemini()">Kirim & Analisis via AI</button>
+        <div class="footer-note">💾 Data otomatis tersimpan ke Rekam Medis (Google Sheets).</div>
     </div>
+</div>
 
-    <!-- Keluaran Diagnosis -->
-    <div id="hasilPanel" class="card" style="display:none;">
-        <h3 id="teksDiagnosis" style="color: #e74c3c;">Sindrom Terdeteksi: -</h3>
-        <p id="teksPenjelasan" style="font-style: italic; color: #555;"></p>
-        <hr>
-        <p><strong>🎯 Titik Akupunktur Master Tung:</strong> <br><span id="teksAkupunktur">-</span></p>
-        <p><strong>💊 Formula Kapsul Jamu (500mg):</strong> <br><span id="teksJamu">-</span></p>
-        <div style="background: #e8f4f8; padding: 10px; border-radius: 5px; margin-top: 10px;">
-            <p style="margin-top:0;"><strong>🏃 Terapi Fisik:</strong> <br><span id="teksFisik">-</span></p>
-            <p style="margin-bottom:0;"><strong>🍲 Edukasi Pola Makan:</strong> <br><span id="teksMakanan">-</span></p>
-        </div>
-        <p style="text-align: center; color: #27ae60; font-weight: bold; margin-top: 15px; font-size: 14px;">💾 Data otomatis tersimpan ke Rekam Medis (Google Sheets).</p>
-    </div>
+<script>
+    // --- DATABASE GEJALA DINAMIS ---
+    const dataGejala = {
+        "Gangguan Pencernaan (Maag, Diare, Sembelit)": [
+            "Mual / Muntah / Asam Lambung Naik (GERD)",
+            "Perut Kembung / Begah / Banyak Gas",
+            "Diare / BAB Cair (Lebih dari 3x sehari)",
+            "Sembelit / BAB Keras atau Sulit"
+        ],
+        "Gangguan Pernapasan (Batuk, Asma, Sesak)": [
+            "Batuk Kering / Tidak Berdahak",
+            "Batuk Berdahak (Putih/Kuning/Hijau)",
+            "Sesak Napas / Mengi (Asma)",
+            "Sakit Tenggorokan / Kering"
+        ],
+        "Nyeri Otot & Sendi (Sakit Pinggang, Rematik)": [
+            "Nyeri Pinggang Belakang",
+            "Nyeri Lutut / Persendian Bengkak",
+            "Kaku Leher dan Pundak",
+            "Mati Rasa / Kesemutan di Ekstremitas"
+        ],
+        "Gangguan Tidur & Emosi (Insomnia, Stres)": [
+            "Sulit Memulai Tidur",
+            "Sering Terbangun di Tengah Malam",
+            "Gelisah / Mudah Marah / Stres",
+            "Dada Berdebar (Palpitasi)"
+        ],
+        "Gangguan Neurologis (Sakit Kepala, Vertigo, Stroke)": [
+            "Sakit Kepala Pusing (Berputar/Vertigo)",
+            "Sakit Kepala Sebelah (Migrain)",
+            "Kelemahan Anggota Gerak (Pasca Stroke)",
+            "Tremor / Gemetar"
+        ]
+    };
 
-    <script>
-        // Tautan Web App Google Script Kang Luxman
-        const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec";
-        let base64ImageString = "";
+    // --- LOGIK GEJALA DINAMIS ---
+    const keluhanSelect = document.getElementById('keluhanUtama');
+    const gejalaContainer = document.getElementById('gejalaContainer');
 
-        const gejalaPenyerta = {
-            pencernaan: [
-                {id: "mual", label: "Mual / Muntah / Asam Lambung Naik (GERD)"},
-                {id: "kembung", label: "Perut Kembung / Begah / Banyak Gas"},
-                {id: "diare", label: "Diare / BAB Cair (Lebih dari 3x sehari)"},
-                {id: "sembelit", label: "Sembelit / BAB Keras atau Sulit"}
-            ]
-        };
+    keluhanSelect.addEventListener('change', function() {
+        const keluhanTerpilih = this.value;
+        const gejalaList = dataGejala[keluhanTerpilih];
+        
+        gejalaContainer.innerHTML = ''; // Kosongkan kontainer
+        
+        gejalaList.forEach(gejala => {
+            const div = document.createElement('div');
+            div.className = 'checkbox-item';
+            div.innerHTML = `
+                <input type="checkbox" name="gejala" value="${gejala}">
+                <label style="margin:0; font-weight:normal; font-size:14px;">${gejala}</label>
+            `;
+            gejalaContainer.appendChild(div);
+        });
+    });
 
-        function updateGejala() {
-            const kategori = document.getElementById("keluhanUtama").value;
-            const panel = document.getElementById("panelGejala");
-            const daftar = document.getElementById("daftarGejala");
-            daftar.innerHTML = "";
-            if (kategori && gejalaPenyerta[kategori]) {
-                gejalaPenyerta[kategori].forEach(g => {
-                    daftar.innerHTML += `<label><input type="checkbox" value="${g.id}"> ${g.label}</label>`;
-                });
-                panel.style.display = "block";
-            } else { panel.style.display = "none"; }
-        }
+    // --- LOGIK PREVIEW & KONVERSI GAMBAR (Base64) ---
+    const fotoInput = document.getElementById('fotoLidah');
+    const previewGambar = document.getElementById('previewGambar');
+    let imageBase64Data = "";
 
-        // Kompresi ringan agar upload ke server cepat
-        function previewGambar(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
+    fotoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    let maxWidth = 800;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > maxWidth) {
-                        height = Math.round((height * maxWidth) / width);
-                        width = maxWidth;
-                    }
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    base64ImageString = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    const imgPreview = document.getElementById('imgPreview');
-                    imgPreview.src = base64ImageString;
-                    imgPreview.style.display = 'block';
-                };
-                img.src = e.target.result;
-            };
+            reader.onload = function(event) {
+                previewGambar.src = event.target.result;
+                previewGambar.style.display = 'block';
+                imageBase64Data = event.target.result; // Simpan base64
+            }
             reader.readAsDataURL(file);
         }
+    });
 
-        async function prosesKeGemini() {
-            const nama = document.getElementById('namaKlien').value;
-            const kategori = document.getElementById("keluhanUtama").value;
-            
-            if(!nama) return alert("Mohon isi Nama Klien terlebih dahulu.");
-            if(!kategori) return alert("Mohon pilih Keluhan Utama.");
-            if(!base64ImageString) return alert("Mohon unggah foto lidah klien.");
+    // --- LOGIK PENGIRIMAN KE GOOGLE SCRIPT ---
+    const formKlinis = document.getElementById('formKlinis');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const hasilContainer = document.getElementById('hasilContainer');
 
-            const keluhanTeks = document.getElementById("keluhanUtama").options[document.getElementById("keluhanUtama").selectedIndex].text;
-            
-            const gejalaMentah = document.querySelectorAll('#daftarGejala input[type="checkbox"]:checked');
-            const gejalaArray = Array.from(gejalaMentah).map(cb => cb.parentNode.innerText.trim());
-            const gejalaTeks = gejalaArray.length > 0 ? gejalaArray.join(", ") : "Tidak ada keluhan penyerta spesifik";
+    // ⚠️⚠️⚠️ GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT TERBARU AKANG ⚠️⚠️⚠️
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
 
-            const btn = document.getElementById('btnProses');
-            const statusBox = document.getElementById('status-ai');
-            const panelHasil = document.getElementById('hasilPanel');
-            
-            btn.disabled = true;
-            btn.innerHTML = "<span class='loader'></span> Sedang membedah gambar & meracik resep...";
-            statusBox.style.background = "#fcf3cf";
-            statusBox.style.color = "#d35400";
-            statusBox.innerHTML = "⏳ AI sedang membaca gambar, harap tunggu sekitar 5-10 detik...";
-            panelHasil.style.display = 'none';
-
-            const payload = {
-                namaKlien: nama,
-                keluhan: keluhanTeks,
-                gejala: gejalaTeks,
-                imageBase64: base64ImageString
-            };
-
-            try {
-                // Mengirim data ke Google Apps Script secara asinkron
-                const response = await fetch(scriptURL, {
-                    method: 'POST',
-                    // Gunakan text/plain untuk menghindari pemblokiran CORS dari browser
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                });
-
-                const hasil = await response.json();
-
-                if(hasil.status === "sukses") {
-                    document.getElementById('teksDiagnosis').innerText = hasil.data.diagnosis;
-                    document.getElementById('teksPenjelasan').innerText = hasil.data.penjelasan;
-                    document.getElementById('teksAkupunktur').innerText = hasil.data.titik;
-                    document.getElementById('teksJamu').innerText = hasil.data.jamu;
-                    document.getElementById('teksFisik').innerText = hasil.data.fisik;
-                    document.getElementById('teksMakanan').innerText = hasil.data.makanan;
-                    
-                    panelHasil.style.display = 'block';
-                    panelHasil.scrollIntoView({ behavior: 'smooth' });
-
-                    statusBox.style.background = "#d4efdf";
-                    statusBox.style.color = "#1e8449";
-                    statusBox.innerHTML = "✅ Analisis Selesai & Data Tersimpan ke Google Sheets!";
-                } else {
-                    alert("AI gagal memproses: " + hasil.pesan);
-                    statusBox.innerHTML = "❌ Terjadi kegagalan saat analisis.";
-                }
-
-            } catch (error) {
-                console.error(error);
-                alert("Gagal terhubung ke peladen. Periksa koneksi internet.");
-                statusBox.innerHTML = "❌ Gagal terhubung.";
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = "Kirim & Analisis via AI";
-            }
+    formKlinis.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!imageBase64Data) {
+            alert("Harap unggah foto lidah terlebih dahulu!");
+            return;
         }
-    </script>
+
+        // Kumpulkan data gejala yang dicentang
+        const gejalaChecked = Array.from(document.querySelectorAll('input[name="gejala"]:checked'))
+                                   .map(cb => cb.value)
+                                   .join(', ');
+
+        const payload = {
+            namaKlien: document.getElementById('namaKlien').value,
+            keluhan: document.getElementById('keluhanUtama').value,
+            gejala: gejalaChecked || "Tidak ada gejala penyerta spesifik",
+            imageBase64: imageBase64Data
+        };
+
+        // Ubah tampilan tombol jadi loading
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = "⏳ Sedang membedah gambar & meracik resep...";
+        hasilContainer.style.display = "none";
+
+        try {
+            const response = await fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === "sukses") {
+                // Tampilkan data AI ke HTML
+                document.getElementById('resDiagnosis').innerText = result.data.diagnosis;
+                document.getElementById('resPenjelasan').innerText = result.data.penjelasan;
+                // Gunakan innerHTML dan replace \n dengan <br> agar baris baru dari AI rapi
+                document.getElementById('resTitik').innerHTML = result.data.titik.replace(/\n/g, '<br>');
+                document.getElementById('resJamu').innerHTML = result.data.jamu.replace(/\n/g, '<br>');
+                document.getElementById('resFisik').innerHTML = result.data.fisik.replace(/\n/g, '<br>');
+                document.getElementById('resMakanan').innerHTML = result.data.makanan.replace(/\n/g, '<br>');
+                
+                hasilContainer.style.display = "block"; // Tampilkan kotak hasil
+            } else {
+                alert("Gagal memproses: " + result.pesan);
+            }
+        } catch (error) {
+            alert("Terjadi kesalahan jaringan/sistem: " + error);
+        } finally {
+            // Kembalikan tombol seperti semula
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = "Kirim & Analisis via AI";
+        }
+    });
+</script>
+
 </body>
 </html>
