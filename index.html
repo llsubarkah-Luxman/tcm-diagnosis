@@ -264,23 +264,22 @@
     document.getElementById('btnWA').addEventListener('click', function() {
         let noWa = document.getElementById('noWaKlien').value;
         if (noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
-        noWa = noWa.replace(/\D/g, ''); // Bersihkan karakter non-angka
+        noWa = noWa.replace(/\D/g, ''); 
 
-        // Format pesan TANPA jamu dan ADA penjelasan sindrom
         const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        // Deteksi apakah dibuka di HP atau Laptop
-        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        // Jika di laptop gunakan web.whatsapp.com agar langsung tembus tanpa klik lanjutan
-        let baseUrl = isMobile ? 'https://api.whatsapp.com/send' : 'https://web.whatsapp.com/send';
-        
-        let tautanWA = baseUrl + '?text=' + encodeURIComponent(teksWA);
-        if (noWa) {
-            tautanWA = baseUrl + '?phone=' + noWa + '&text=' + encodeURIComponent(teksWA);
-        }
-        
+        // Salin teks otomatis ke memori komputer/HP (Clipboard)
+        navigator.clipboard.writeText(teksWA).then(() => {
+            console.log("Teks berhasil disalin.");
+        }).catch(err => {
+            console.error("Gagal menyalin teks", err);
+        });
+
+        // Membuka WhatsApp
+        let tautanWA = noWa ? `https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA) : `https://wa.me/?text=` + encodeURIComponent(teksWA);
         window.open(tautanWA, '_blank');
+        
+        alert("💡 Info: Teks edukasi telah disalin otomatis. Jika pada WhatsApp Web pesan tidak muncul, silakan klik kanan lalu pilih Paste (Ctrl + V).");
     });
 </script>
 </body>
