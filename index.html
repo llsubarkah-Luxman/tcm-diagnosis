@@ -18,29 +18,21 @@
         button { width: 100%; padding: 14px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:disabled { background: #95a5a6; }
         .btn-wa { background: #25D366; margin-top: 15px; }
+        .btn-reset { background: #95a5a6; margin-top: 10px; } /* Gaya tombol reset */
         .btn-scan { background: #e67e22; width: auto; padding: 12px 15px; }
         .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
+        
+        /* SCROLLBAR UNTUK PENCARIAN */
+        #searchResults { max-height: 320px; overflow-y: auto; padding-right: 8px; }
+        #searchResults::-webkit-scrollbar { width: 6px; }
+        #searchResults::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 10px; }
+        
         .history-card { background: #fff; padding: 15px; margin-top: 10px; border-left: 4px solid #3498db; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 6px; }
         .image-preview { width: 100%; max-height: 250px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; }
         #modalConfig { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
         .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
         #qrOutput { margin-top: 15px; padding: 15px; background: #f9f9f9; text-align: center; border-radius: 8px; border: 2px dashed #ccc; display: none; }
         #reader { width: 100%; margin-top: 15px; display: none; }
-    /* --- TAMPILAN BAR GESER PENCARIAN --- */
-        #searchResults {
-            max-height: 320px; /* Tinggi maksimal sekitar 2 kartu riwayat */
-            overflow-y: auto;  /* Memunculkan scrollbar vertikal otomatis */
-            padding-right: 8px; /* Jarak agar scrollbar tidak menempel ke teks */
-        }
-        
-        /* Mempercantik bentuk scrollbar agar terlihat modern */
-        #searchResults::-webkit-scrollbar {
-            width: 6px;
-        }
-        #searchResults::-webkit-scrollbar-thumb {
-            background: #bdc3c7; 
-            border-radius: 10px;
-        }
     </style>
 </head>
 <body>
@@ -76,7 +68,8 @@
     <!-- FORM MEDIS -->
     <form id="formKlinis">
         <div class="form-row">
-            <div class="form-col"><label>NRM (Kosongkan jika Baru):</label><input type="text" id="nrmKlien" placeholder="Otomatis dibuat sistem"></div>
+            <!-- NRM DIKUNCI (READONLY) AGAR TERAPIS TIDAK SALAH KETIK -->
+            <div class="form-col"><label>NRM (Pasien Baru Otomatis):</label><input type="text" id="nrmKlien" placeholder="Otomatis diisi sistem" readonly style="background-color: #f1f3f5; cursor: not-allowed;"></div>
             <div class="form-col"><label>Tensi Darah:</label><input type="text" id="tensiKlien" placeholder="120/80"></div>
         </div>
         <div class="form-row">
@@ -128,12 +121,15 @@
         </div>
 
         <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
-        <button id="btnWA" class="btn-wa">Kirim Edukasi via WA</button>
+        
+        <button type="button" id="btnWA" class="btn-wa">Kirim Edukasi via WA</button>
+        <!-- TOMBOL BERSIHKAN FORM / RESET -->
+        <button type="button" id="btnReset" class="btn-reset">🔄 Pendaftaran Pasien Baru</button>
     </div>
 </div>
 
 <script>
-    // ⚠️ PASTIKAN URL INI SESUAI DENGAN WEB APP TERBARU AKANG (PENTING KARENA CODE.GS BERUBAH)
+    // ⚠️ PASTIKAN URL INI SESUAI DENGAN WEB APP TERBARU AKANG
     const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
     
     let profilKlinik = {};
@@ -220,7 +216,6 @@
                     
                     let nrmAman = r.nrm.replace(/'/g, "\\'");
                     let namaAman = r.nama.replace(/'/g, "\\'");
-                    // Penanganan agar No WA yang diawali kutip tunggal dari Sheet bisa bersih
                     let waAman = r.wa ? r.wa.toString().replace(/'/g, "") : ''; 
 
                     html += `<div class="history-card">
@@ -243,9 +238,7 @@
     window.pilihPasien = function(nrm, nama, wa) {
         document.getElementById('nrmKlien').value = nrm;
         document.getElementById('namaKlien').value = nama;
-        document.getElementById('noWaKlien').value = wa; // <--- No WA Terisi Otomatis!
-        
-        // Mengisi panduan singkat di kotak wawancara
+        document.getElementById('noWaKlien').value = wa; 
         document.getElementById('dataWawancara').value = "1. Beban Pikiran/Stres : \n2. Emosi Tertahan : \n3. Kualitas Tidur : ";
         document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
     };
@@ -293,6 +286,15 @@
                 const rd = result.data;
                 dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
+            // Memformat Makanan agar judul bernomor ditebalkan (Bold) dengan jarak baris
+                let formatMakananWeb = rd.makanan;
+                if (formatMakananWeb.includes("1. Anjuran")) {
+                    formatMakananWeb = formatMakananWeb
+                        .replace(/1\.\s*Anjuran\s*:/gi, '<b>1. Anjuran:</b>')
+                        .replace(/2\.\s*Pantangan\s*:/gi, '<br><br><b>2. Pantangan:</b>')
+                        .replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '<br><br><b>3. Keseimbangan Termal:</b>');
+                }
+
                 document.getElementById('resLengkap').innerHTML = `
                     <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
                     <i style="color:#555;">${rd.penjelasan}</i><hr style="border: 0.5px solid #eee; margin:15px 0;">
@@ -303,7 +305,7 @@
                     <b>🔴 Bekam:</b> ${rd.bekam}<br><br>
                     <b>🌿 Jamu:</b> ${rd.jamu}<hr style="border: 0.5px solid #eee; margin:15px 0;">
                     <b>🏃 Gerak:</b> ${rd.gerak}<br><br>
-                    <b>🥗 Makanan:</b> ${rd.makanan}
+                    <b>🥗 Makanan:</b> ${formatMakananWeb}
                 `;
                 
                 document.getElementById('nrmText').innerText = rd.nrm;
@@ -327,11 +329,19 @@
             if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1); 
         }
 
-        const namaKlinik = profilKlinik.nama || "Klinik TCM";
+         const namaKlinik = profilKlinik.nama || "Klinik TCM";
         const alamatKlinik = profilKlinik.alamat || "";
 
-        const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
-        
+        // Memformat Makanan agar judul bernomor ditebalkan di WhatsApp
+        let formatMakananWA = dataPasienTerakhir.makanan;
+        if (formatMakananWA.includes("1. Anjuran")) {
+            formatMakananWA = formatMakananWA
+                .replace(/1\.\s*Anjuran\s*:/gi, '*1. Anjuran:*')
+                .replace(/2\.\s*Pantangan\s*:/gi, '\n\n*2. Pantangan:*')
+                .replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '\n\n*3. Keseimbangan Termal:*');
+        }
+
+        const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${formatMakananWA}\n\n_Semoga lekas sembuh!_`;        
         let waUrl = noWa && noWa.length >= 9 
             ? `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}` 
             : `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
@@ -341,6 +351,35 @@
         }
 
         window.open(waUrl, '_blank');
+    });
+
+    // 9. FUNGSI RESET FORM UNTUK PASIEN BARU
+    document.getElementById('btnReset').addEventListener('click', function() {
+        if(confirm("Apakah Anda yakin ingin membersihkan form untuk mendaftar pasien baru?")) {
+            // Bersihkan semua input form
+            document.getElementById('formKlinis').reset();
+            
+            // Bersihkan variabel di belakang layar
+            imageBase64Data = "";
+            dataPasienTerakhir = {};
+            
+            // Sembunyikan foto lidah yang sebelumnya tampil
+            document.getElementById('previewGambar').style.display = 'none';
+            document.getElementById('previewGambar').src = '';
+            
+            // Sembunyikan input keluhan manual jika ada
+            document.getElementById('keluhanManual').style.display = 'none';
+            
+            // Sembunyikan kotak hasil diagnosis dan QR Code
+            document.getElementById('hasilContainer').style.display = 'none';
+            
+            // Bersihkan kotak pencarian dan hasil pencarian
+            document.getElementById('inputSearch').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+            
+            // Gulir layar ke paling atas
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     });
 </script>
 </body>
