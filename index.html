@@ -281,29 +281,49 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan"; }
     });
 
-    // 7. KIRIM WA WHITE-LABEL & AUTO-COPY
+    // 7. KIRIM WA WHITE-LABEL & AUTO-COPY (VERSI ANTI-BLOKIR HP)
     document.getElementById('btnWA').addEventListener('click', function() {
+        // Pastikan data tidak kosong
+        if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
+            alert("Belum ada data diagnosis pasien yang bisa dikirim.");
+            return;
+        }
+
+        // Ambil dan bersihkan nomor WA
         let noWa = document.getElementById('noWaKlien').value;
-        if (noWa && noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
-        noWa = noWa ? noWa.replace(/\D/g, '') : ''; 
+        if (noWa) {
+            noWa = noWa.replace(/\D/g, ''); // Hapus selain angka
+            if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1); // Ubah 0 jadi 62
+        }
 
         const namaKlinik = profilKlinik.nama || "Klinik TCM";
         const alamatKlinik = profilKlinik.alamat || "";
 
-        // Teks yang akan dikirim ke WhatsApp (Bersih dari bahasa medis/teknis)
+        // Susun teks
         const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        // Fitur 1: Salin teks ke memori HP (Clipboard)
-        navigator.clipboard.writeText(teksWA).then(function() {
-            alert("💡 Teks disalin. Jendela WhatsApp akan terbuka. Silakan 'Paste' / Tempel teks jika kotak pesan masih kosong.");
-        }).catch(function(err) {
-            console.error("Gagal menyalin: ", err);
-            alert("💡 Jendela WhatsApp akan terbuka.");
-        });
+        // Gunakan API resmi WhatsApp yang lebih stabil untuk HP
+        let waUrl = "";
+        if (noWa && noWa.length >= 9) {
+            waUrl = `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
+        } else {
+            // Jika no WA kosong, buka WA untuk pilih kontak manual
+            waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
+        }
 
-        // Fitur 2: Buka aplikasi WhatsApp
-        const waUrl = noWa ? `https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA) : `https://wa.me/?text=` + encodeURIComponent(teksWA);
-        window.open(waUrl, '_blank');
+        // Proses Copy dan Buka WA tanpa menggunakan Alert yang bisa memblokir pop-up
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(teksWA).then(function() {
+                // Teks disalin, langsung alihkan halaman ke aplikasi WA
+                window.location.href = waUrl; 
+            }).catch(function() {
+                // Jika gagal disalin, tetap paksa buka WA
+                window.location.href = waUrl;
+            });
+        } else {
+            // Jika browser tidak dukung clipboard, langsung buka WA
+            window.location.href = waUrl;
+        }
     });
 </script>
 </body>
