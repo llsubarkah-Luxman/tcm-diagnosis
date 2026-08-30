@@ -169,7 +169,7 @@
         }, function(error) { /* Abaikan error selama proses mencari fokus */ });
     });
 
-    // 4. PENCARIAN DATA
+  // 4. PENCARIAN DATA & AUTO-FILL
     document.getElementById('btnSearch').addEventListener('click', async function() {
         const keyword = document.getElementById('inputSearch').value;
         if(!keyword) return;
@@ -182,9 +182,18 @@
                 let html = '';
                 result.data.forEach(r => {
                     let tgl = new Date(r.waktu).toLocaleDateString('id-ID');
-                    let fotoHtml = r.foto ? `<br><a href="${r.foto}" target="_blank" style="color:#e67e22;">📸 Lihat Foto Lidah Sebelumnya</a>` : '';
+                    let fotoHtml = r.foto ? `<br><a href="${r.foto}" target="_blank" style="color:#e67e22; text-decoration:none;">📸 Lihat Foto Lidah Sebelumnya</a>` : '';
+                    
+                    // Mencegah error jika ada tanda kutip pada nama
+                    let nrmAman = r.nrm.replace(/'/g, "\\'");
+                    let namaAman = r.nama.replace(/'/g, "\\'");
+
                     html += `<div class="history-card">
-                                <b>[${r.nrm}] ${r.nama}</b> (${tgl})<br>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                    <b>[${r.nrm}] ${r.nama}</b>
+                                    <button type="button" onclick="pilihPasien('${nrmAman}', '${namaAman}')" style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; border-radius:6px;">Pilih Pasien Ini</button>
+                                </div>
+                                <span style="font-size:11px; color:#7f8c8d;">Kunjungan: ${tgl}</span><br>
                                 <span style="color:#555">Wawancara: ${r.wawancara}</span><br>
                                 <b style="color:#e74c3c">Diagnosis: ${r.diagnosis}</b>
                                 ${fotoHtml}
@@ -194,6 +203,17 @@
             } else { resDiv.innerHTML = '<b style="color:red">Pasien tidak ditemukan.</b>'; }
         } catch(e) { resDiv.innerHTML = "Error jaringan."; }
     });
+
+    // FUNGSI UNTUK MENGISI FORM OTOMATIS
+    window.pilihPasien = function(nrm, nama) {
+        document.getElementById('nrmKlien').value = nrm;
+        document.getElementById('namaKlien').value = nama;
+        
+        alert("✅ Data Pasien [" + nrm + " - " + nama + "] berhasil dimasukkan ke form!");
+        
+        // Menggulir layar otomatis ke arah form klinis
+        document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
+    };
 
     // 5. PREVIEW GAMBAR
     document.getElementById('fotoLidah').addEventListener('change', function(e) {
