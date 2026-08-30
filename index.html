@@ -3,342 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekam Medis TCM & Multiterapi</title>
+    <title>Sistem Klinik TCM</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; line-height: 1.6; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 650px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 25px; font-weight: 700; font-size: 24px; }
-        .form-group { margin-bottom: 20px; }
-        .form-row { display: flex; gap: 15px; }
+        h2 { text-align: center; color: #2c3e50; }
+        .form-row { display: flex; gap: 15px; margin-bottom:15px; }
         .form-col { flex: 1; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; color: #2c3e50; font-size: 14px; }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1.5px solid #e1e8ed; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; box-sizing: border-box; }
-        .checkbox-group { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e1e8ed; }
-        .checkbox-item { display: flex; align-items: flex-start; margin-bottom: 10px; }
-        .checkbox-item input { margin-top: 4px; margin-right: 12px; transform: scale(1.2); }
-        .image-preview { width: 100%; max-height: 300px; object-fit: contain; margin-top: 15px; border-radius: 8px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        button.btn-utama { width: 100%; padding: 14px; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: 0.2s; }
-        button.btn-utama:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4); }
-        button.btn-utama:disabled { background: #bdc3c7; cursor: not-allowed; }
-        
-        /* Desain Search Box */
-        .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #d1e8f0; }
-        .search-box h4 { margin-top: 0; color: #2980b9; margin-bottom: 10px; font-size: 15px; }
-        .history-card { background: #fff; padding: 10px 15px; margin-top: 10px; border-left: 3px solid #3498db; border-radius: 4px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .history-date { font-weight: bold; color: #7f8c8d; font-size: 11px; margin-bottom: 4px; display: block; }
-        
-        #hasilContainer { display: none; margin-top: 35px; border-top: 2px dashed #e1e8ed; padding-top: 25px; }
-        .card-hasil { background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
-        .diagnosis-title { color: #e74c3c; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-        .penjelasan { font-style: italic; color: #636e72; font-size: 14px; margin-bottom: 20px; }
-        .section-title { font-weight: 700; font-size: 15px; color: #2c3e50; display: flex; align-items: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
-        .section-title span { margin-right: 8px; font-size: 18px; }
-        .isi-hasil { font-size: 14px; color: #444; margin-bottom: 0; }
-        button.btn-wa { width: 100%; padding: 14px; background: #25D366; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; margin-top: 20px; }
+        label { font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: 'Poppins'; font-size: 14px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:disabled { background: #95a5a6; }
+        .btn-wa { background: #25D366; margin-top: 15px; }
+        .btn-scan { background: #e67e22; width: auto; padding: 12px 15px; }
+        .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
+        .history-card { background: #fff; padding: 10px; margin-top: 10px; border-left: 3px solid #3498db; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .image-preview { width: 100%; max-height: 250px; object-fit: contain; margin-top: 10px; display: none; }
+        #modalConfig { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        #qrOutput { margin-top: 15px; padding: 15px; background: #f9f9f9; text-align: center; border-radius: 8px; border: 2px dashed #ccc; display: none; }
+        #reader { width: 100%; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Klinik TCM & Multiterapi</h2>
+<!-- MODAL PENGATURAN KLINIK -->
+<div id="modalConfig">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:#2c3e50;">⚙️ Setup Profil Klinik</h3>
+        <p style="font-size:13px; color:#7f8c8d;">Isi data ini untuk awalan NRM dan Kop WhatsApp.</p>
+        <div style="margin-bottom:10px;"><input type="text" id="confNama" placeholder="Nama Klinik / Terapis"></div>
+        <div style="margin-bottom:10px;"><input type="text" id="confSingkatan" placeholder="Singkatan NRM (Misal: TCM)" maxlength="4"></div>
+        <div style="margin-bottom:10px;"><input type="text" id="confAlamat" placeholder="Alamat Praktik"></div>
+        <div style="margin-bottom:15px;"><input type="text" id="confKontak" placeholder="No. WA Klinik"></div>
+        <button id="btnSaveConfig">Simpan Konfigurasi</button>
+    </div>
+</div>
 
-    <!-- PANEL PENCARIAN PASIEN LAMA -->
+<div class="container" id="mainApp" style="display:none;">
+    <h2 id="judulKlinik">Klinik TCM</h2>
+
+    <!-- PANEL PENCARIAN & SCANNER -->
     <div class="search-box">
-        <h4>🔍 Cari Riwayat Pasien Lama</h4>
+        <h4 style="margin-top:0; color:#2980b9;">🔍 Pencarian & Scan QR Pasien</h4>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="inputSearch" placeholder="Ketik NIK atau Nama Pasien..." style="flex: 1; padding: 10px;">
-            <button type="button" id="btnSearch" class="btn-utama" style="width: 80px; padding: 10px;">Cari</button>
+            <input type="text" id="inputSearch" placeholder="Ketik NRM atau Nama...">
+            <button type="button" id="btnSearch" style="width: 80px;">Cari</button>
+            <button type="button" id="btnScanQR" class="btn-scan">📷 Scan</button>
         </div>
+        <div id="reader"></div>
         <div id="searchResults"></div>
     </div>
 
-    <!-- FORM INPUT PASIEN BARU/LAMA -->
+    <!-- FORM MEDIS -->
     <form id="formKlinis">
-        <h4 style="color: #2c3e50; border-bottom: 2px solid #e1e8ed; padding-bottom: 5px; margin-bottom: 20px;">📝 Form Rekam Medis (Hari Ini)</h4>
-        
         <div class="form-row">
-            <div class="form-col">
-                <label>1. NIK (Opsional):</label>
-                <input type="number" id="nikKlien" placeholder="16 digit NIK">
-            </div>
-            <div class="form-col">
-                <label>2. Tensi Darah:</label>
-                <input type="text" id="tensiKlien" placeholder="Contoh: 120/80">
-            </div>
+            <div class="form-col"><label>NRM (Kosongkan jika Baru):</label><input type="text" id="nrmKlien" placeholder="Otomatis dibuat sistem"></div>
+            <div class="form-col"><label>Tensi Darah:</label><input type="text" id="tensiKlien" placeholder="120/80"></div>
         </div>
-
-        <div class="form-row" style="margin-top: 20px;">
-            <div class="form-col">
-                <label>3. Nama Lengkap:</label>
-                <input type="text" id="namaKlien" placeholder="Budi Santoso" required>
-            </div>
-            <div class="form-col">
-                <label>4. No. WhatsApp:</label>
-                <input type="number" id="noWaKlien" placeholder="081234...">
-            </div>
+        <div class="form-row">
+            <div class="form-col"><label>Nama Lengkap:</label><input type="text" id="namaKlien" required></div>
+            <div class="form-col"><label>No. WhatsApp:</label><input type="number" id="noWaKlien"></div>
         </div>
+        
+        <label style="margin-top:15px;">Keluhan Utama:</label>
+        <select id="keluhanUtama" required style="margin-bottom:15px;">
+            <option value="" disabled selected>-- Pilih --</option>
+            <option value="Pencernaan">Pencernaan (Maag/Diare)</option>
+            <option value="Pernapasan">Pernapasan (Batuk/Asma)</option>
+            <option value="Nyeri Sendi">Nyeri Sendi & Saraf</option>
+            <option value="Emosi">Gangguan Emosi & Insomnia</option>
+            <option value="Lainnya">Lainnya...</option>
+        </select>
 
-        <div class="form-group" style="margin-top: 20px;">
-            <label>5. Pilih Keluhan Utama Klien:</label>
-            <select id="keluhanUtama" required>
-                <option value="" disabled selected>-- Pilih Keluhan Utama --</option>
-                <option value="Gangguan Pencernaan (Maag, Diare, Cegukan)">Gangguan Pencernaan (Maag, Diare, Cegukan)</option>
-                <option value="Gangguan Pernapasan (Batuk, Asma, Sesak)">Gangguan Pernapasan (Batuk, Asma, Sesak)</option>
-                <option value="Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)">Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)</option>
-                <option value="Benjolan & Kelenjar (Tiroid, Lipoma, Ganglion)">Benjolan & Kelenjar (Tiroid, Lipoma, Ganglion)</option>
-                <option value="THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)">THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)</option>
-                <option value="Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)">Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)</option>
-                <option value="Gangguan Reproduksi & Kewanitaan (Haid, Promil)">Gangguan Reproduksi & Kewanitaan (Haid, Promil)</option>
-                <option value="Metabolik & Diet (Gula, Asam Urat, Obesitas)">Metabolik & Diet (Gula, Asam Urat, Obesitas)</option>
-                <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
-                <option value="Gangguan Neurologis (Sakit Kepala, Vertigo)">Gangguan Neurologis (Sakit Kepala, Vertigo)</option>
-                <option value="Sindrom Kelelahan & Penurunan Imun">Sindrom Kelelahan & Penurunan Imun</option>
-            </select>
-        </div>
+        <label>Catatan Wawancara (Anamnesis):</label>
+        <textarea id="dataWawancara" rows="3" placeholder="Gali detail stres, suhu tubuh, pencernaan, dll..."></textarea>
+        
+        <label style="margin-top:15px;">Unggah Foto Lidah:</label>
+        <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
+        <img id="previewGambar" class="image-preview">
 
-        <div class="form-group">
-            <label>6. Centang Gejala Penyerta:</label>
-            <div id="gejalaContainer" class="checkbox-group">
-                <p style="color:#95a5a6; font-size: 13px; margin:0;">Pilih keluhan utama terlebih dahulu.</p>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>7. Unggah Foto Lidah Klien:</label>
-            <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
-            <img id="previewGambar" class="image-preview" alt="Preview Lidah">
-        </div>
-
-        <button type="submit" id="btnSubmit" class="btn-utama">Kirim & Analisis via AI</button>
+        <button type="submit" id="btnSubmit" style="margin-top:20px;">Analisis AI & Simpan</button>
     </form>
 
-    <div id="hasilContainer">
-        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">Laporan & Opsi Terapi</h3>
+    <!-- HASIL DIAGNOSIS & QR -->
+    <div id="hasilContainer" style="display:none; margin-top:30px; border-top:2px dashed #ccc; padding-top:20px;">
+        <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil Disimpan!</h3>
         
-        <div class="card-hasil">
-            <div class="diagnosis-title" id="resDiagnosis"></div>
-            <div class="penjelasan" id="resPenjelasan"></div>
-        </div>
-        
-        <h4 style="color: #34495e; margin-bottom: 10px;">📋 Pilihan Modalitas Terapi (Untuk Praktisi)</h4>
-        
-        <div class="card-hasil" style="border-left: 4px solid #e74c3c;">
-            <div class="section-title"><span>🎯</span> Akupunktur Master Tung:</div>
-            <div id="resTung" class="isi-hasil"></div>
-        </div>
-        
-        <div class="card-hasil" style="border-left: 4px solid #3498db;">
-            <div class="section-title"><span>⚖️</span> Keseimbangan Dr. Tan:</div>
-            <div id="resTan" class="isi-hasil"></div>
+        <!-- AREA CETAK QR CODE -->
+        <div id="qrOutput">
+            <h4 style="margin-top:0; color:#34495e;">ID Kartu Pasien Digital</h4>
+            <div id="qrcodeBox" style="display:flex; justify-content:center; margin-bottom:10px;"></div>
+            <b id="nrmText" style="font-size:18px; color:#e74c3c;"></b>
+            <p style="font-size:12px; color:#7f8c8d; margin-bottom:0;">Minta pasien memfoto Barcode ini untuk pendaftaran kunjungan berikutnya.</p>
         </div>
 
-        <div class="card-hasil" style="border-left: 4px solid #9b59b6;">
-            <div class="section-title"><span>🧠</span> Scalp Yamamoto (YNSA):</div>
-            <div id="resYamamoto" class="isi-hasil"></div>
-        </div>
-
-        <div class="card-hasil" style="border-left: 4px solid #f39c12;">
-            <div class="section-title"><span>🤲</span> Terapi Tuina:</div>
-            <div id="resTuina" class="isi-hasil"></div>
-        </div>
-
-        <div class="card-hasil" style="border-left: 4px solid #c0392b;">
-            <div class="section-title"><span>🔴</span> Terapi Bekam:</div>
-            <div id="resBekam" class="isi-hasil"></div>
-        </div>
-        
-        <div class="card-hasil" style="border-left: 4px solid #27ae60;">
-            <div class="section-title"><span>🌿</span> Jamu / Kapsul Herbal:</div>
-            <div id="resJamu" class="isi-hasil"></div>
-        </div>
-        
-        <h4 style="color: #34495e; margin-top: 25px; margin-bottom: 10px;">🏠 Edukasi (Untuk Pasien)</h4>
-
-        <div class="card-hasil" style="border-left: 4px solid #1abc9c;">
-            <div class="section-title"><span>🏃</span> Terapi Gerak (Olahraga):</div>
-            <div id="resGerak" class="isi-hasil"></div>
-        </div>
-        
-        <div class="card-hasil" style="border-left: 4px solid #d35400;">
-            <div class="section-title"><span>🥗</span> Terapi Makanan (Panas & Dingin):</div>
-            <div id="resMakanan" class="isi-hasil"></div>
-        </div>
-
-        <button id="btnWA" class="btn-wa">Salin & Kirim WA Pasien</button>
+        <div style="background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px;" id="resLengkap"></div>
+        <button id="btnWA" class="btn-wa">Kirim Edukasi via WA</button>
     </div>
 </div>
 
 <script>
-    const dataGejala = {
-        "Gangguan Pencernaan (Maag, Diare, Cegukan)": ["Mual / Asam Lambung Naik", "Perut Kembung", "Diare (>3x sehari)", "Cegukan / Sendawa", "Sembelit"],
-        "Gangguan Pernapasan (Batuk, Asma, Sesak)": ["Batuk Kering", "Batuk Berdahak", "Sesak Napas / Mengi", "Sakit Tenggorokan"],
-        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": ["Nyeri/Kaku Jari Tangan", "Nyeri Tumit / Engkel", "Nyeri Pinggang", "Kaku Leher/Pundak"],
-        "Benjolan & Kelenjar (Tiroid, Lipoma, Ganglion)": ["Bengkak Leher (Tiroid)", "Benjolan Lunak (Lipoma)", "Benjolan Keras Sendi", "Benjolan Nyeri"],
-        "THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)": ["Biduran / Kaligata", "Ruam Gatal", "Hidung Mampet (Sinus)", "Telinga Berdenging"],
-        "Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)": ["Penurunan Visus (Minus/Plus)", "Mata Merah/Kering", "Mata Berkabut (Katarak)", "Tekanan Mata Tinggi (Glaukoma)"],
-        "Gangguan Reproduksi & Kewanitaan (Haid, Promil)": ["Nyeri Haid Hebat", "Siklus Tidak Teratur", "Sensasi Panas (Menopause)", "Keputihan Abnormal"],
-        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": ["Ingin Program Diet", "Tengkuk Terasa Berat", "Sering Haus & Lapar", "Nyeri Sendi Kemerahan"],
-        "Gangguan Tidur & Emosi (Insomnia, Stres)": ["Sulit Memulai Tidur", "Terbangun Tengah Malam", "Mudah Marah / Cemas", "Dada Berdebar"],
-        "Gangguan Neurologis (Sakit Kepala, Vertigo)": ["Pusing Berputar (Vertigo)", "Sakit Kepala Sebelah", "Kelemahan Anggota Gerak", "Gemetar (Tremor)"],
-        "Sindrom Kelelahan & Penurunan Imun": ["Badan Sangat Berat", "Mudah Ngos-ngosan", "Keringat Dingin Keluar Sendiri", "Nafsu Makan Menurun"]
+    // ⚠️ GANTI DENGAN URL WEB APP TERBARU AKANG
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
+    
+    let profilKlinik = {};
+    let imageBase64Data = "";
+    let dataPasienTerakhir = {};
+
+    // 1. CEK KONFIGURASI SAAT HALAMAN DIBUKA
+    window.onload = async function() {
+        try {
+            const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "getConfig" }) });
+            const result = await res.json();
+            if (result.status === "kosong") {
+                document.getElementById('modalConfig').style.display = "flex";
+            } else {
+                profilKlinik = result.data;
+                document.getElementById('judulKlinik').innerText = profilKlinik.nama;
+                document.getElementById('mainApp').style.display = "block";
+            }
+        } catch (e) { alert("Gagal memuat pengaturan. Cek koneksi."); }
     };
 
-    const keluhanSelect = document.getElementById('keluhanUtama');
-    const gejalaContainer = document.getElementById('gejalaContainer');
-
-    keluhanSelect.addEventListener('change', function() {
-        const gejalaList = dataGejala[this.value] || [];
-        gejalaContainer.innerHTML = ''; 
-        gejalaList.forEach(gejala => {
-            const div = document.createElement('div');
-            div.className = 'checkbox-item';
-            div.innerHTML = `<input type="checkbox" name="gejala" value="${gejala}"><label style="margin:0; font-weight:normal;">${gejala}</label>`;
-            gejalaContainer.appendChild(div);
-        });
+    // 2. SIMPAN KONFIGURASI BARU
+    document.getElementById('btnSaveConfig').addEventListener('click', async function() {
+        const payload = {
+            action: "setConfig",
+            nama: document.getElementById('confNama').value,
+            singkatan: document.getElementById('confSingkatan').value,
+            alamat: document.getElementById('confAlamat').value,
+            kontak: document.getElementById('confKontak').value
+        };
+        if(!payload.nama || !payload.singkatan) return alert("Nama & Singkatan Wajib Diisi!");
+        
+        this.innerText = "Menyimpan...";
+        await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
+        alert("Pengaturan Berhasil Disimpan! Halaman akan dimuat ulang.");
+        location.reload();
     });
 
-    const fotoInput = document.getElementById('fotoLidah');
-    const previewGambar = document.getElementById('previewGambar');
-    let imageBase64Data = "";
+    // 3. SCANNER QR CODE
+    let html5QrcodeScanner = null;
+    document.getElementById('btnScanQR').addEventListener('click', function() {
+        const readerDiv = document.getElementById('reader');
+        if (readerDiv.style.display === "block") {
+            readerDiv.style.display = "none";
+            if(html5QrcodeScanner) html5QrcodeScanner.clear();
+            this.innerText = "📷 Scan QR";
+            return;
+        }
+        readerDiv.style.display = "block";
+        this.innerText = "Tutup Kamera";
+        
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+        html5QrcodeScanner.render(function(decodedText) {
+            document.getElementById('inputSearch').value = decodedText; // Masukkan hasil scan ke kolom cari
+            html5QrcodeScanner.clear();
+            document.getElementById('reader').style.display = "none";
+            document.getElementById('btnScanQR').innerText = "📷 Scan QR";
+            document.getElementById('btnSearch').click(); // Otomatis pencet tombol cari
+        }, function(error) { /* Abaikan error selama proses mencari fokus */ });
+    });
 
-    fotoInput.addEventListener('change', function(e) {
+    // 4. PENCARIAN DATA
+    document.getElementById('btnSearch').addEventListener('click', async function() {
+        const keyword = document.getElementById('inputSearch').value;
+        if(!keyword) return;
+        const resDiv = document.getElementById('searchResults');
+        resDiv.innerHTML = "<i>Mencari data...</i>";
+        try {
+            const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "search", searchKey: keyword }) });
+            const result = await res.json();
+            if (result.status === "sukses" && result.data.length > 0) {
+                let html = '';
+                result.data.forEach(r => {
+                    let tgl = new Date(r.waktu).toLocaleDateString('id-ID');
+                    let fotoHtml = r.foto ? `<br><a href="${r.foto}" target="_blank" style="color:#e67e22;">📸 Lihat Foto Lidah Sebelumnya</a>` : '';
+                    html += `<div class="history-card">
+                                <b>[${r.nrm}] ${r.nama}</b> (${tgl})<br>
+                                <span style="color:#555">Wawancara: ${r.wawancara}</span><br>
+                                <b style="color:#e74c3c">Diagnosis: ${r.diagnosis}</b>
+                                ${fotoHtml}
+                             </div>`;
+                });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<b style="color:red">Pasien tidak ditemukan.</b>'; }
+        } catch(e) { resDiv.innerHTML = "Error jaringan."; }
+    });
+
+    // 5. PREVIEW GAMBAR
+    document.getElementById('fotoLidah').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                previewGambar.src = event.target.result;
-                previewGambar.style.display = 'block';
+                document.getElementById('previewGambar').src = event.target.result;
+                document.getElementById('previewGambar').style.display = 'block';
                 imageBase64Data = event.target.result;
             }
             reader.readAsDataURL(file);
         }
     });
 
-    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT TERBARU DI SINI
-    const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
-
-    // --- LOGIKA PENCARIAN PASIEN LAMA ---
-    document.getElementById('btnSearch').addEventListener('click', async function() {
-        const keyword = document.getElementById('inputSearch').value;
-        if(!keyword) return alert("Silakan masukkan NIK atau Nama pasien terlebih dahulu!");
-
-        const btn = document.getElementById('btnSearch');
-        const resDiv = document.getElementById('searchResults');
-        
-        btn.innerText = "⏳";
-        btn.disabled = true;
-        resDiv.innerHTML = "<p style='font-size:13px; color:#7f8c8d;'>Mencari data di rekam medis...</p>";
-
-        try {
-            const payload = { action: "search", searchKey: keyword };
-            const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
-            const result = await response.json();
-
-            if (result.status === "sukses" && result.data.length > 0) {
-                let html = '';
-                result.data.forEach(r => {
-                    let tgl = new Date(r.waktu).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'});
-                    html += `<div class="history-card">
-                                <span class="history-date">📅 Kunjungan: ${tgl}</span>
-                                <b>👤 ${r.nama}</b> (NIK: ${r.nik})<br>
-                                <span style="color:#e74c3c">Keluhan:</span> ${r.keluhan} - ${r.gejala}<br>
-                                <span style="color:#2980b9">Diagnosis:</span> ${r.diagnosis}
-                             </div>`;
-                });
-                resDiv.innerHTML = html;
-            } else {
-                resDiv.innerHTML = '<p style="color: #e74c3c; font-size: 13px;">❌ Data pasien tidak ditemukan.</p>';
-            }
-        } catch(e) {
-            resDiv.innerHTML = '<p style="color: #e74c3c; font-size: 13px;">Gagal memuat data. Periksa koneksi.</p>';
-        } finally {
-            btn.innerText = "Cari";
-            btn.disabled = false;
-        }
-    });
-
-    // --- LOGIKA INPUT & AI ---
-    const formKlinis = document.getElementById('formKlinis');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const hasilContainer = document.getElementById('hasilContainer');
-    let dataPasienTerakhir = {}; 
-
-    formKlinis.addEventListener('submit', async function(e) {
+    // 6. SUBMIT DATA & GENERATE QR
+    document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
-        if (!imageBase64Data) return alert("Harap unggah foto lidah!");
-
-        const gejalaChecked = Array.from(document.querySelectorAll('input[name="gejala"]:checked')).map(cb => cb.value).join(', ');
-
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true; btn.innerText = "Menganalisis Lidah & Meracik Resep...";
+        
         const payload = {
-            action: "insert", // Menandakan ini untuk input baru
-            nik: document.getElementById('nikKlien').value,
+            action: "insert", 
+            nrm: document.getElementById('nrmKlien').value, // Jika kosong, diisi server
             namaKlien: document.getElementById('namaKlien').value,
             noWa: document.getElementById('noWaKlien').value,
             tensi: document.getElementById('tensiKlien').value,
             keluhan: document.getElementById('keluhanUtama').value,
-            gejala: gejalaChecked || "Tidak ada gejala spesifik",
+            gejala: "-", // Disederhanakan untuk contoh
+            wawancara: document.getElementById('dataWawancara').value,
             imageBase64: imageBase64Data
         };
 
-        btnSubmit.disabled = true;
-        btnSubmit.innerHTML = "⏳ Membedah Sindrom Secara Presisi...";
-        hasilContainer.style.display = "none";
-
         try {
-            const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
-            const result = await response.json();
+            const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.json();
             
             if (result.status === "sukses") {
-                document.getElementById('resDiagnosis').innerText = result.data.diagnosis;
-                document.getElementById('resPenjelasan').innerText = result.data.penjelasan;
-                document.getElementById('resTung').innerHTML = result.data.tung.replace(/\n/g, '<br>');
-                document.getElementById('resTan').innerHTML = result.data.tan.replace(/\n/g, '<br>');
-                document.getElementById('resYamamoto').innerHTML = result.data.yamamoto.replace(/\n/g, '<br>');
-                document.getElementById('resTuina').innerHTML = result.data.tuina.replace(/\n/g, '<br>');
-                document.getElementById('resBekam').innerHTML = result.data.bekam.replace(/\n/g, '<br>');
-                document.getElementById('resJamu').innerHTML = result.data.jamu.replace(/\n/g, '<br>');
-                document.getElementById('resGerak').innerHTML = result.data.gerak.replace(/\n/g, '<br>');
-                document.getElementById('resMakanan').innerHTML = result.data.makanan.replace(/\n/g, '<br>');
+                const rd = result.data;
+                dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
-                dataPasienTerakhir = {
-                    nama: payload.namaKlien,
-                    tensi: payload.tensi,
-                    diagnosis: result.data.diagnosis,
-                    penjelasan: result.data.penjelasan,
-                    gerak: result.data.gerak,
-                    makanan: result.data.makanan
-                };
-                hasilContainer.style.display = "block"; 
-            } else {
-                alert("Gagal memproses: " + result.pesan);
-            }
-        } catch (error) {
-            alert("Kesibukan Server. Silakan klik tombol kirim lagi.");
-        } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.innerHTML = "Kirim & Analisis via AI";
-        }
+                // Tampilkan Teks Medis
+                document.getElementById('resLengkap').innerHTML = `
+                    <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
+                    <i>${rd.penjelasan}</i><hr>
+                    <b>Tung:</b> ${rd.tung}<br><b>Tan:</b> ${rd.tan}<br><b>YNSA:</b> ${rd.yamamoto}<br><b>Jamu:</b> ${rd.jamu}
+                `;
+                
+                // BUAT QR CODE DI LAYAR
+                document.getElementById('nrmText').innerText = rd.nrm;
+                document.getElementById('qrcodeBox').innerHTML = ""; // Bersihkan QR lama
+                new QRCode(document.getElementById("qrcodeBox"), { text: rd.nrm, width: 150, height: 150 });
+                
+                document.getElementById('qrOutput').style.display = "block";
+                document.getElementById('hasilContainer').style.display = "block"; 
+            } else { alert("Gagal: " + result.pesan); }
+        } catch (e) { alert("Server Sibuk."); } 
+        finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan"; }
     });
 
-    // --- LOGIKA WA ---
+    // 7. KIRIM WA WHITE-LABEL
     document.getElementById('btnWA').addEventListener('click', function() {
         let noWa = document.getElementById('noWaKlien').value;
-        if (noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
+        if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
         noWa = noWa.replace(/\D/g, ''); 
 
-        const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
+        // Menggunakan Nama Klinik dari Pengaturan
+        const teksWA = `*${profilKlinik.nama}*\n_${profilKlinik.alamat}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        navigator.clipboard.writeText(teksWA).then(() => {
-            console.log("Teks berhasil disalin.");
-        }).catch(err => {
-            console.error("Gagal menyalin teks", err);
-        });
-
-        let tautanWA = noWa ? `https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA) : `https://wa.me/?text=` + encodeURIComponent(teksWA);
-        window.open(tautanWA, '_blank');
-        
-        alert("💡 Info: Teks edukasi telah disalin ke memori perangkat. Jika pesan tidak otomatis terisi di WA, silakan tekan 'Paste' (Tempel) di kolom chat pasien.");
+        window.open(`https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA), '_blank');
     });
 </script>
 </body>
