@@ -26,6 +26,21 @@
         .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
         #qrOutput { margin-top: 15px; padding: 15px; background: #f9f9f9; text-align: center; border-radius: 8px; border: 2px dashed #ccc; display: none; }
         #reader { width: 100%; margin-top: 15px; display: none; }
+    /* --- TAMPILAN BAR GESER PENCARIAN --- */
+        #searchResults {
+            max-height: 320px; /* Tinggi maksimal sekitar 2 kartu riwayat */
+            overflow-y: auto;  /* Memunculkan scrollbar vertikal otomatis */
+            padding-right: 8px; /* Jarak agar scrollbar tidak menempel ke teks */
+        }
+        
+        /* Mempercantik bentuk scrollbar agar terlihat modern */
+        #searchResults::-webkit-scrollbar {
+            width: 6px;
+        }
+        #searchResults::-webkit-scrollbar-thumb {
+            background: #bdc3c7; 
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
