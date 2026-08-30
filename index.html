@@ -20,8 +20,8 @@
         .btn-wa { background: #25D366; margin-top: 15px; }
         .btn-scan { background: #e67e22; width: auto; padding: 12px 15px; }
         .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
-        .history-card { background: #fff; padding: 10px; margin-top: 10px; border-left: 3px solid #3498db; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .image-preview { width: 100%; max-height: 250px; object-fit: contain; margin-top: 10px; display: none; }
+        .history-card { background: #fff; padding: 15px; margin-top: 10px; border-left: 4px solid #3498db; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 6px; }
+        .image-preview { width: 100%; max-height: 250px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; }
         #modalConfig { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
         .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
         #qrOutput { margin-top: 15px; padding: 15px; background: #f9f9f9; text-align: center; border-radius: 8px; border: 2px dashed #ccc; display: none; }
@@ -29,7 +29,7 @@
     </style>
 </head>
 <body>
-    
+
 <!-- MODAL PENGATURAN KLINIK -->
 <div id="modalConfig">
     <div class="modal-content">
@@ -72,10 +72,14 @@
         <label style="margin-top:15px;">Keluhan Utama:</label>
         <select id="keluhanUtama" required style="margin-bottom:15px;">
             <option value="" disabled selected>-- Pilih --</option>
-            <option value="Pencernaan">Pencernaan (Maag/Diare)</option>
-            <option value="Pernapasan">Pernapasan (Batuk/Asma)</option>
-            <option value="Nyeri Sendi">Nyeri Sendi & Saraf</option>
-            <option value="Emosi">Gangguan Emosi & Insomnia</option>
+            <option value="Pencernaan (Maag/Diare/Asam Lambung)">Pencernaan (Maag/Diare/Asam Lambung)</option>
+            <option value="Pernapasan (Batuk/Asma/Sesak)">Pernapasan (Batuk/Asma/Sesak)</option>
+            <option value="Nyeri Sendi, Otot & Saraf (HNP/Stroke)">Nyeri Sendi, Otot & Saraf (HNP/Stroke)</option>
+            <option value="Gangguan Emosi, Stres & Insomnia">Gangguan Emosi, Stres & Insomnia</option>
+            <option value="Sakit Kepala / Migrain / Vertigo">Sakit Kepala / Migrain / Vertigo</option>
+            <option value="Gangguan Reproduksi / Menstruasi / Vitalitas">Gangguan Reproduksi / Menstruasi / Vitalitas</option>
+            <option value="Kelelahan Kronis / Kelemahan Umum">Kelelahan Kronis / Kelemahan Umum</option>
+            <option value="Hipertensi / Kolesterol / Gula Darah">Hipertensi / Kolesterol / Gula Darah</option>
             <option value="Lainnya">Lainnya...</option>
         </select>
 
@@ -97,17 +101,17 @@
         <div id="qrOutput">
             <h4 style="margin-top:0; color:#34495e;">ID Kartu Pasien Digital</h4>
             <div id="qrcodeBox" style="display:flex; justify-content:center; margin-bottom:10px;"></div>
-            <b id="nrmText" style="font-size:18px; color:#e74c3c;"></b>
+            <b id="nrmText" style="font-size:20px; color:#e74c3c;"></b>
             <p style="font-size:12px; color:#7f8c8d; margin-bottom:0;">Minta pasien memfoto Barcode ini untuk pendaftaran kunjungan berikutnya.</p>
         </div>
 
-        <div style="background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px;" id="resLengkap"></div>
+        <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
         <button id="btnWA" class="btn-wa">Kirim Edukasi via WA</button>
     </div>
 </div>
 
 <script>
-    // ⚠️ GANTI DENGAN URL WEB APP TERBARU AKANG
+    // ⚠️ GANTI DENGAN URL WEB APP TERBARU AKANG (Jika ada perubahan)
     const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
     
     let profilKlinik = {};
@@ -161,15 +165,15 @@
         
         html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
         html5QrcodeScanner.render(function(decodedText) {
-            document.getElementById('inputSearch').value = decodedText; // Masukkan hasil scan ke kolom cari
+            document.getElementById('inputSearch').value = decodedText;
             html5QrcodeScanner.clear();
             document.getElementById('reader').style.display = "none";
             document.getElementById('btnScanQR').innerText = "📷 Scan QR";
-            document.getElementById('btnSearch').click(); // Otomatis pencet tombol cari
+            document.getElementById('btnSearch').click();
         }, function(error) { /* Abaikan error selama proses mencari fokus */ });
     });
 
-  // 4. PENCARIAN DATA & AUTO-FILL
+    // 4. PENCARIAN DATA & AUTO-FILL
     document.getElementById('btnSearch').addEventListener('click', async function() {
         const keyword = document.getElementById('inputSearch').value;
         if(!keyword) return;
@@ -190,8 +194,8 @@
 
                     html += `<div class="history-card">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                    <b>[${r.nrm}] ${r.nama}</b>
-                                    <button type="button" onclick="pilihPasien('${nrmAman}', '${namaAman}')" style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; border-radius:6px;">Pilih Pasien Ini</button>
+                                    <b style="font-size:14px; color:#2c3e50;">[${r.nrm}] ${r.nama}</b>
+                                    <button type="button" onclick="pilihPasien('${nrmAman}', '${namaAman}')" style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; border-radius:6px; margin:0;">Pilih Pasien</button>
                                 </div>
                                 <span style="font-size:11px; color:#7f8c8d;">Kunjungan: ${tgl}</span><br>
                                 <span style="color:#555">Wawancara: ${r.wawancara}</span><br>
@@ -208,10 +212,6 @@
     window.pilihPasien = function(nrm, nama) {
         document.getElementById('nrmKlien').value = nrm;
         document.getElementById('namaKlien').value = nama;
-        
-        alert("✅ Data Pasien [" + nrm + " - " + nama + "] berhasil dimasukkan ke form!");
-        
-        // Menggulir layar otomatis ke arah form klinis
         document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
     };
 
@@ -229,7 +229,7 @@
         }
     });
 
-   // 6. SUBMIT DATA & GENERATE QR
+    // 6. SUBMIT DATA & GENERATE QR
     document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
@@ -237,12 +237,12 @@
         
         const payload = {
             action: "insert", 
-            nrm: document.getElementById('nrmKlien').value, // Jika kosong, diisi server
+            nrm: document.getElementById('nrmKlien').value, 
             namaKlien: document.getElementById('namaKlien').value,
             noWa: document.getElementById('noWaKlien').value,
             tensi: document.getElementById('tensiKlien').value,
             keluhan: document.getElementById('keluhanUtama').value,
-            gejala: "-", // Disederhanakan untuk contoh
+            gejala: "-", 
             wawancara: document.getElementById('dataWawancara').value,
             imageBase64: imageBase64Data
         };
@@ -258,20 +258,20 @@
                 // TAMPILKAN TEKS MEDIS LENGKAP (PANDUAN TERAPIS)
                 document.getElementById('resLengkap').innerHTML = `
                     <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
-                    <i>${rd.penjelasan}</i><hr style="border: 0.5px solid #eee;">
+                    <i style="color:#555;">${rd.penjelasan}</i><hr style="border: 0.5px solid #eee; margin:15px 0;">
                     <b>🎯 Tung:</b> ${rd.tung}<br><br>
                     <b>⚖️ Tan:</b> ${rd.tan}<br><br>
                     <b>🧠 YNSA:</b> ${rd.yamamoto}<br><br>
                     <b>🤲 Tuina:</b> ${rd.tuina}<br><br>
                     <b>🔴 Bekam:</b> ${rd.bekam}<br><br>
-                    <b>🌿 Jamu:</b> ${rd.jamu}<hr style="border: 0.5px solid #eee;">
+                    <b>🌿 Jamu:</b> ${rd.jamu}<hr style="border: 0.5px solid #eee; margin:15px 0;">
                     <b>🏃 Gerak:</b> ${rd.gerak}<br><br>
                     <b>🥗 Makanan:</b> ${rd.makanan}
                 `;
                 
                 // BUAT QR CODE DI LAYAR
                 document.getElementById('nrmText').innerText = rd.nrm;
-                document.getElementById('qrcodeBox').innerHTML = ""; // Bersihkan QR lama
+                document.getElementById('qrcodeBox').innerHTML = ""; 
                 new QRCode(document.getElementById("qrcodeBox"), { text: rd.nrm, width: 150, height: 150 });
                 
                 document.getElementById('qrOutput').style.display = "block";
@@ -281,19 +281,17 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan"; }
     });
 
-    // 7. KIRIM WA WHITE-LABEL & AUTO-COPY (VERSI ANTI-BLOKIR HP)
+    // 7. KIRIM WA WHITE-LABEL & AUTO-COPY (BUKA DI TAB BARU)
     document.getElementById('btnWA').addEventListener('click', function() {
-        // Pastikan data tidak kosong
         if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
             alert("Belum ada data diagnosis pasien yang bisa dikirim.");
             return;
         }
 
-        // Ambil dan bersihkan nomor WA
         let noWa = document.getElementById('noWaKlien').value;
         if (noWa) {
-            noWa = noWa.replace(/\D/g, ''); // Hapus selain angka
-            if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1); // Ubah 0 jadi 62
+            noWa = noWa.replace(/\D/g, ''); 
+            if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1); 
         }
 
         const namaKlinik = profilKlinik.nama || "Klinik TCM";
@@ -302,28 +300,18 @@
         // Susun teks
         const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        // Gunakan API resmi WhatsApp yang lebih stabil untuk HP
-        let waUrl = "";
-        if (noWa && noWa.length >= 9) {
-            waUrl = `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
-        } else {
-            // Jika no WA kosong, buka WA untuk pilih kontak manual
-            waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
+        // Gunakan API resmi WhatsApp
+        let waUrl = noWa && noWa.length >= 9 
+            ? `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}` 
+            : `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
+
+        // Salin ke clipboard secara senyap
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(teksWA).catch(e => console.log("Gagal menyalin: ", e));
         }
 
-        // Proses Copy dan Buka WA tanpa menggunakan Alert yang bisa memblokir pop-up
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(teksWA).then(function() {
-                // Teks disalin, langsung alihkan halaman ke aplikasi WA
-                window.location.href = waUrl; 
-            }).catch(function() {
-                // Jika gagal disalin, tetap paksa buka WA
-                window.location.href = waUrl;
-            });
-        } else {
-            // Jika browser tidak dukung clipboard, langsung buka WA
-            window.location.href = waUrl;
-        }
+        // BUKA DI TAB BARU (_blank) agar web klinik tidak tertutup
+        window.open(waUrl, '_blank');
     });
 </script>
 </body>
