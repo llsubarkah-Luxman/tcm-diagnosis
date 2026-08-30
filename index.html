@@ -209,7 +209,7 @@
         }
     });
 
-    // 6. SUBMIT DATA & GENERATE QR
+   // 6. SUBMIT DATA & GENERATE QR
     document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
@@ -235,11 +235,18 @@
                 const rd = result.data;
                 dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
-                // Tampilkan Teks Medis
+                // TAMPILKAN TEKS MEDIS LENGKAP (PANDUAN TERAPIS)
                 document.getElementById('resLengkap').innerHTML = `
                     <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
-                    <i>${rd.penjelasan}</i><hr>
-                    <b>Tung:</b> ${rd.tung}<br><b>Tan:</b> ${rd.tan}<br><b>YNSA:</b> ${rd.yamamoto}<br><b>Jamu:</b> ${rd.jamu}
+                    <i>${rd.penjelasan}</i><hr style="border: 0.5px solid #eee;">
+                    <b>🎯 Tung:</b> ${rd.tung}<br><br>
+                    <b>⚖️ Tan:</b> ${rd.tan}<br><br>
+                    <b>🧠 YNSA:</b> ${rd.yamamoto}<br><br>
+                    <b>🤲 Tuina:</b> ${rd.tuina}<br><br>
+                    <b>🔴 Bekam:</b> ${rd.bekam}<br><br>
+                    <b>🌿 Jamu:</b> ${rd.jamu}<hr style="border: 0.5px solid #eee;">
+                    <b>🏃 Gerak:</b> ${rd.gerak}<br><br>
+                    <b>🥗 Makanan:</b> ${rd.makanan}
                 `;
                 
                 // BUAT QR CODE DI LAYAR
@@ -254,16 +261,29 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan"; }
     });
 
-    // 7. KIRIM WA WHITE-LABEL
+    // 7. KIRIM WA WHITE-LABEL & AUTO-COPY
     document.getElementById('btnWA').addEventListener('click', function() {
         let noWa = document.getElementById('noWaKlien').value;
-        if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
-        noWa = noWa.replace(/\D/g, ''); 
+        if (noWa && noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
+        noWa = noWa ? noWa.replace(/\D/g, '') : ''; 
 
-        // Menggunakan Nama Klinik dari Pengaturan
-        const teksWA = `*${profilKlinik.nama}*\n_${profilKlinik.alamat}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
+        const namaKlinik = profilKlinik.nama || "Klinik TCM";
+        const alamatKlinik = profilKlinik.alamat || "";
+
+        // Teks yang akan dikirim ke WhatsApp (Bersih dari bahasa medis/teknis)
+        const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        window.open(`https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA), '_blank');
+        // Fitur 1: Salin teks ke memori HP (Clipboard)
+        navigator.clipboard.writeText(teksWA).then(function() {
+            alert("💡 Teks disalin. Jendela WhatsApp akan terbuka. Silakan 'Paste' / Tempel teks jika kotak pesan masih kosong.");
+        }).catch(function(err) {
+            console.error("Gagal menyalin: ", err);
+            alert("💡 Jendela WhatsApp akan terbuka.");
+        });
+
+        // Fitur 2: Buka aplikasi WhatsApp
+        const waUrl = noWa ? `https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA) : `https://wa.me/?text=` + encodeURIComponent(teksWA);
+        window.open(waUrl, '_blank');
     });
 </script>
 </body>
