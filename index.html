@@ -69,22 +69,30 @@
             <div class="form-col"><label>No. WhatsApp:</label><input type="number" id="noWaKlien"></div>
         </div>
         
+        <!-- BLOK DINAMIS KELUHAN & GEJALA -->
         <label style="margin-top:15px;">Keluhan Utama:</label>
         <select id="keluhanUtama" required style="margin-bottom:15px;">
-            <option value="" disabled selected>-- Pilih --</option>
-            <option value="Pencernaan (Maag/Diare/Asam Lambung)">Pencernaan (Maag/Diare/Asam Lambung)</option>
-            <option value="Pernapasan (Batuk/Asma/Sesak)">Pernapasan (Batuk/Asma/Sesak)</option>
-            <option value="Nyeri Sendi, Otot & Saraf (HNP/Stroke)">Nyeri Sendi, Otot & Saraf (HNP/Stroke)</option>
-            <option value="Gangguan Emosi, Stres & Insomnia">Gangguan Emosi, Stres & Insomnia</option>
-            <option value="Sakit Kepala / Migrain / Vertigo">Sakit Kepala / Migrain / Vertigo</option>
-            <option value="Gangguan Reproduksi / Menstruasi / Vitalitas">Gangguan Reproduksi / Menstruasi / Vitalitas</option>
-            <option value="Kelelahan Kronis / Kelemahan Umum">Kelelahan Kronis / Kelemahan Umum</option>
-            <option value="Hipertensi / Kolesterol / Gula Darah">Hipertensi / Kolesterol / Gula Darah</option>
-            <option value="Lainnya">Lainnya...</option>
+            <option value="" disabled selected>-- Pilih Keluhan Utama --</option>
+            <option value="Gangguan Pencernaan (Maag, Diare, Cegukan)">Gangguan Pencernaan (Maag, Diare, Cegukan)</option>
+            <option value="Gangguan Pernapasan (Batuk, Asma, Sesak)">Gangguan Pernapasan (Batuk, Asma, Sesak)</option>
+            <option value="Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)">Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)</option>
+            <option value="Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)">Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)</option>
+            <option value="THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)">THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)</option>
+            <option value="Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)">Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)</option>
+            <option value="Gangguan Reproduksi & Kewanitaan (Haid, Promil)">Gangguan Reproduksi & Kewanitaan (Haid, Promil)</option>
+            <option value="Metabolik & Diet (Gula, Asam Urat, Obesitas)">Metabolik & Diet (Gula, Asam Urat, Obesitas)</option>
+            <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
+            <option value="Gangguan Neurologis (Sakit Kepala, Vertigo)">Gangguan Neurologis (Sakit Kepala, Vertigo)</option>
+            <option value="Sindrom Kelelahan & Penurunan Imun">Sindrom Kelelahan & Penurunan Imun</option>
+        </select>
+
+        <label>Gejala Penyerta:</label>
+        <select id="gejalaKlien" required style="margin-bottom:15px;">
+            <option value="" disabled selected>-- Pilih Gejala --</option>
         </select>
 
         <label>Catatan Wawancara (Anamnesis):</label>
-        <textarea id="dataWawancara" rows="3" placeholder="Gali detail stres, suhu tubuh, pencernaan, dll..."></textarea>
+        <textarea id="dataWawancara" rows="5" placeholder="Pilih Keluhan Utama untuk memunculkan panduan wawancara..." required></textarea>
         
         <label style="margin-top:15px;">Unggah Foto Lidah:</label>
         <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
@@ -111,12 +119,66 @@
 </div>
 
 <script>
-    // ⚠️ GANTI DENGAN URL WEB APP TERBARU AKANG (Jika ada perubahan)
+    // ⚠️ PASTIKAN URL INI SESUAI DENGAN WEB APP TERBARU AKANG
     const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
     
     let profilKlinik = {};
     let imageBase64Data = "";
     let dataPasienTerakhir = {};
+
+    // === DATABASE GEJALA & PANDUAN WAWANCARA ===
+    const dataGejala = {
+        "Gangguan Pencernaan (Maag, Diare, Cegukan)": ["Mual / Asam Lambung Naik", "Perut Kembung", "Diare (>3x sehari)", "Cegukan / Sendawa", "Sembelit"],
+        "Gangguan Pernapasan (Batuk, Asma, Sesak)": ["Batuk Kering", "Batuk Berdahak", "Sesak Napas / Mengi", "Sakit Tenggorokan"],
+        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": ["Nyeri/Kaku Jari Tangan", "Nyeri Tumit / Engkel", "Nyeri Pinggang", "Kaku Leher/Pundak"],
+        "Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)": ["Bengkak Leher (Tiroid / Gondok)", "Benjolan di Payudara (Kista / FAM)", "Benjolan Lunak (Lipoma)", "Benjolan Keras Sendi (Ganglion)"],
+        "THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)": ["Biduran / Kaligata", "Ruam Gatal", "Hidung Mampet (Sinus)", "Telinga Berdenging"],
+        "Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)": ["Penurunan Visus (Minus/Plus)", "Mata Merah/Kering", "Mata Berkabut (Katarak)", "Tekanan Mata Tinggi (Glaukoma)"],
+        "Gangguan Reproduksi & Kewanitaan (Haid, Promil)": ["Nyeri Haid Hebat", "Siklus Tidak Teratur", "Sensasi Panas (Menopause)", "Keputihan Abnormal"],
+        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": ["Ingin Program Diet", "Tengkuk Terasa Berat", "Sering Haus & Lapar", "Nyeri Sendi Kemerahan"],
+        "Gangguan Tidur & Emosi (Insomnia, Stres)": ["Sulit Memulai Tidur", "Terbangun Tengah Malam", "Mudah Marah / Cemas", "Dada Berdebar"],
+        "Gangguan Neurologis (Sakit Kepala, Vertigo)": ["Pusing Berputar (Vertigo)", "Sakit Kepala Sebelah", "Kelemahan Anggota Gerak", "Gemetar (Tremor)"],
+        "Sindrom Kelelahan & Penurunan Imun": ["Badan Sangat Berat", "Mudah Ngos-ngosan", "Keringat Dingin Keluar Sendiri", "Nafsu Makan Menurun"]
+    };
+
+    const panduanWawancara = {
+        "Gangguan Pencernaan (Maag, Diare, Cegukan)": "1. Nyeri/kembung membaik jika ditekan atau dihangatkan? :\n2. Bentuk feses (kering/lembek/cair/berbau tajam)? :\n3. Ada rasa pahit, asam, atau hambar di mulut? :\n4. Bagaimana nafsu makan dan rasa haus? : ",
+        "Gangguan Pernapasan (Batuk, Asma, Sesak)": "1. Warna dan bentuk dahak (putih/kuning, encer/kental)? :\n2. Sesak memburuk saat terkena dingin atau malam hari? :\n3. Apakah sering keluar keringat dingin/spontan? : ",
+        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": "1. Sifat nyeri (seperti ditusuk tajam / pegal / terasa sangat berat)? :\n2. Membaik jika dikompres hangat atau dingin? :\n3. Apakah nyerinya menetap atau berpindah-pindah? : ",
+        "Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)": "1. Benjolan teraba keras seperti batu atau lunak/kenyal? :\n2. Apakah membesar saat sedang stres atau menjelang haid? :\n3. Apakah terasa nyeri jika disentuh/ditekan? : ",
+        "THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)": "1. (Kulit) Apakah gatal memburuk saat cuaca dingin atau berkeringat? :\n2. (THT) Denging telinga suaranya bernada tinggi atau rendah/seperti ombak? :\n3. (Hidung) Ingus berwarna bening atau kuning kental? : ",
+        "Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)": "1. Mata terasa kering, perih, atau sering berair? :\n2. Apakah ada keluhan penyerta seperti pusing atau telinga berdenging? :\n3. Apakah sering bergadang atau kelelahan menatap layar? : ",
+        "Gangguan Reproduksi & Kewanitaan (Haid, Promil)": "1. Warna darah haid (merah pucat / gelap bergumpal)? :\n2. Nyeri haid membaik jika dikompres hangat? :\n3. Warna dan bau keputihan (jika ada)? : ",
+        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": "1. Apakah sering merasa sangat lapar atau sangat haus? :\n2. Apakah sering buang air kecil di malam hari? :\n3. Apakah badan/kaki sering terasa sangat berat? : ",
+        "Gangguan Tidur & Emosi (Insomnia, Stres)": "1. Sulit tertidur atau sering terbangun di tengah malam? :\n2. Apakah sering bermimpi buruk atau dada berdebar? :\n3. Apakah sedang banyak pikiran, mudah marah, atau mudah sedih? : ",
+        "Gangguan Neurologis (Sakit Kepala, Vertigo)": "1. Sakit kepala terasa berdenyut, berat, atau seperti diikat? :\n2. Vertigo memburuk saat perubahan posisi kepala? :\n3. Apakah ada rasa mual hebat saat serangan? : ",
+        "Sindrom Kelelahan & Penurunan Imun": "1. Apakah merasa pusing/berkunang-kunang saat bangkit berdiri? :\n2. Kapan rasa lelah paling parah (pagi/sore)? :\n3. Apakah telapak tangan dan kaki sering terasa dingin? : "
+    };
+
+    // FUNGSI MENGUBAH GEJALA DAN WAWANCARA OTOMATIS
+    document.getElementById('keluhanUtama').addEventListener('change', function() {
+        const keluhan = this.value;
+        const gejalaSelect = document.getElementById('gejalaKlien');
+        const wawancaraArea = document.getElementById('dataWawancara');
+
+        // Bersihkan gejala lama dan isi dengan opsi baru
+        gejalaSelect.innerHTML = '<option value="" disabled selected>-- Pilih Gejala --</option>';
+        if (dataGejala[keluhan]) {
+            dataGejala[keluhan].forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.textContent = g;
+                gejalaSelect.appendChild(opt);
+            });
+        }
+
+        // Tampilkan template wawancara
+        if (panduanWawancara[keluhan]) {
+            wawancaraArea.value = panduanWawancara[keluhan];
+        } else {
+            wawancaraArea.value = "";
+        }
+    });
 
     // 1. CEK KONFIGURASI SAAT HALAMAN DIBUKA
     window.onload = async function() {
@@ -188,7 +250,6 @@
                     let tgl = new Date(r.waktu).toLocaleDateString('id-ID');
                     let fotoHtml = r.foto ? `<br><a href="${r.foto}" target="_blank" style="color:#e67e22; text-decoration:none;">📸 Lihat Foto Lidah Sebelumnya</a>` : '';
                     
-                    // Mencegah error jika ada tanda kutip pada nama
                     let nrmAman = r.nrm.replace(/'/g, "\\'");
                     let namaAman = r.nama.replace(/'/g, "\\'");
 
@@ -208,7 +269,6 @@
         } catch(e) { resDiv.innerHTML = "Error jaringan."; }
     });
 
-    // FUNGSI UNTUK MENGISI FORM OTOMATIS
     window.pilihPasien = function(nrm, nama) {
         document.getElementById('nrmKlien').value = nrm;
         document.getElementById('namaKlien').value = nama;
@@ -242,7 +302,7 @@
             noWa: document.getElementById('noWaKlien').value,
             tensi: document.getElementById('tensiKlien').value,
             keluhan: document.getElementById('keluhanUtama').value,
-            gejala: "-", 
+            gejala: document.getElementById('gejalaKlien').value, // <--- Sudah Mengambil Gejala Dinamis
             wawancara: document.getElementById('dataWawancara').value,
             imageBase64: imageBase64Data
         };
@@ -255,7 +315,6 @@
                 const rd = result.data;
                 dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
-                // TAMPILKAN TEKS MEDIS LENGKAP (PANDUAN TERAPIS)
                 document.getElementById('resLengkap').innerHTML = `
                     <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
                     <i style="color:#555;">${rd.penjelasan}</i><hr style="border: 0.5px solid #eee; margin:15px 0;">
@@ -269,7 +328,6 @@
                     <b>🥗 Makanan:</b> ${rd.makanan}
                 `;
                 
-                // BUAT QR CODE DI LAYAR
                 document.getElementById('nrmText').innerText = rd.nrm;
                 document.getElementById('qrcodeBox').innerHTML = ""; 
                 new QRCode(document.getElementById("qrcodeBox"), { text: rd.nrm, width: 150, height: 150 });
@@ -297,20 +355,16 @@
         const namaKlinik = profilKlinik.nama || "Klinik TCM";
         const alamatKlinik = profilKlinik.alamat || "";
 
-        // Susun teks
         const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${dataPasienTerakhir.makanan}\n\n_Semoga lekas sembuh!_`;
         
-        // Gunakan API resmi WhatsApp
         let waUrl = noWa && noWa.length >= 9 
             ? `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}` 
             : `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
 
-        // Salin ke clipboard secara senyap
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(teksWA).catch(e => console.log("Gagal menyalin: ", e));
         }
 
-        // BUKA DI TAB BARU (_blank) agar web klinik tidak tertutup
         window.open(waUrl, '_blank');
     });
 </script>
