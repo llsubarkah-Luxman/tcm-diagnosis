@@ -69,9 +69,9 @@
             <div class="form-col"><label>No. WhatsApp:</label><input type="number" id="noWaKlien"></div>
         </div>
         
-        <!-- BLOK DINAMIS KELUHAN & GEJALA -->
+        <!-- BLOK KELUHAN (DENGAN OPSI LAINNYA) -->
         <label style="margin-top:15px;">Keluhan Utama:</label>
-        <select id="keluhanUtama" required style="margin-bottom:15px;">
+        <select id="keluhanUtama" required style="margin-bottom:10px;">
             <option value="" disabled selected>-- Pilih Keluhan Utama --</option>
             <option value="Gangguan Pencernaan (Maag, Diare, Cegukan)">Gangguan Pencernaan (Maag, Diare, Cegukan)</option>
             <option value="Gangguan Pernapasan (Batuk, Asma, Sesak)">Gangguan Pernapasan (Batuk, Asma, Sesak)</option>
@@ -84,15 +84,24 @@
             <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
             <option value="Gangguan Neurologis (Sakit Kepala, Vertigo)">Gangguan Neurologis (Sakit Kepala, Vertigo)</option>
             <option value="Sindrom Kelelahan & Penurunan Imun">Sindrom Kelelahan & Penurunan Imun</option>
+            <option value="Lainnya">Lainnya... (Ketik Manual)</option>
         </select>
+        
+        <!-- INPUT MANUAL JIKA PILIH LAINNYA -->
+        <input type="text" id="keluhanManual" placeholder="Ketik keluhan utama pasien..." style="display:none; margin-bottom:15px;">
 
-        <label>Gejala Penyerta:</label>
-        <select id="gejalaKlien" required style="margin-bottom:15px;">
-            <option value="" disabled selected>-- Pilih Gejala --</option>
-        </select>
+        <!-- BLOK GEJALA (BISA TAMBAH MANUAL) -->
+        <label>Gejala Penyerta (Pilih & Tambahkan):</label>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <select id="gejalaDropdown" style="flex:1;">
+                <option value="" disabled selected>-- Pilih Panduan Gejala --</option>
+            </select>
+            <button type="button" id="btnTambahGejala" style="width:auto; padding:12px; background:#e67e22; border-radius:8px;">+ Tambah</button>
+        </div>
+        <textarea id="gejalaKlien" rows="2" placeholder="Ketik gejala tambahan di sini atau gunakan tombol tambah di atas..." required style="margin-bottom:15px;"></textarea>
 
         <label>Catatan Wawancara (Anamnesis):</label>
-        <textarea id="dataWawancara" rows="5" placeholder="Pilih Keluhan Utama untuk memunculkan panduan wawancara..." required></textarea>
+        <textarea id="dataWawancara" rows="5" placeholder="Panduan wawancara akan muncul otomatis di sini..." required></textarea>
         
         <label style="margin-top:15px;">Unggah Foto Lidah:</label>
         <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
@@ -105,7 +114,6 @@
     <div id="hasilContainer" style="display:none; margin-top:30px; border-top:2px dashed #ccc; padding-top:20px;">
         <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil Disimpan!</h3>
         
-        <!-- AREA CETAK QR CODE -->
         <div id="qrOutput">
             <h4 style="margin-top:0; color:#34495e;">ID Kartu Pasien Digital</h4>
             <div id="qrcodeBox" style="display:flex; justify-content:center; margin-bottom:10px;"></div>
@@ -155,28 +163,49 @@
         "Sindrom Kelelahan & Penurunan Imun": "1. Apakah merasa pusing/berkunang-kunang saat bangkit berdiri? :\n2. Kapan rasa lelah paling parah (pagi/sore)? :\n3. Apakah telapak tangan dan kaki sering terasa dingin? : "
     };
 
-    // FUNGSI MENGUBAH GEJALA DAN WAWANCARA OTOMATIS
+    // FUNGSI DINAMIS KELUHAN, GEJALA, DAN LAINNYA
     document.getElementById('keluhanUtama').addEventListener('change', function() {
         const keluhan = this.value;
-        const gejalaSelect = document.getElementById('gejalaKlien');
+        const gejalaDropdown = document.getElementById('gejalaDropdown');
         const wawancaraArea = document.getElementById('dataWawancara');
+        const inputManual = document.getElementById('keluhanManual');
 
-        // Bersihkan gejala lama dan isi dengan opsi baru
-        gejalaSelect.innerHTML = '<option value="" disabled selected>-- Pilih Gejala --</option>';
-        if (dataGejala[keluhan]) {
-            dataGejala[keluhan].forEach(g => {
-                const opt = document.createElement('option');
-                opt.value = g;
-                opt.textContent = g;
-                gejalaSelect.appendChild(opt);
-            });
-        }
-
-        // Tampilkan template wawancara
-        if (panduanWawancara[keluhan]) {
-            wawancaraArea.value = panduanWawancara[keluhan];
-        } else {
+        if(keluhan === "Lainnya") {
+            inputManual.style.display = "block";
+            inputManual.required = true;
+            gejalaDropdown.innerHTML = '<option value="" disabled selected>-- Pilih Panduan Gejala --</option>';
             wawancaraArea.value = "";
+        } else {
+            inputManual.style.display = "none";
+            inputManual.required = false;
+            inputManual.value = "";
+            
+            // Isi dropdown gejala
+            gejalaDropdown.innerHTML = '<option value="" disabled selected>-- Pilih Panduan Gejala --</option>';
+            if (dataGejala[keluhan]) {
+                dataGejala[keluhan].forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g;
+                    opt.textContent = g;
+                    gejalaDropdown.appendChild(opt);
+                });
+            }
+            
+            // Isi panduan wawancara
+            wawancaraArea.value = panduanWawancara[keluhan] || "";
+        }
+    });
+
+    // FUNGSI TOMBOL TAMBAH GEJALA KE KOTAK TEKS
+    document.getElementById('btnTambahGejala').addEventListener('click', function() {
+        const val = document.getElementById('gejalaDropdown').value;
+        if(val) {
+            const txt = document.getElementById('gejalaKlien');
+            if(txt.value.trim() === "") {
+                txt.value = val;
+            } else {
+                txt.value += ", " + val;
+            }
         }
     });
 
@@ -232,7 +261,7 @@
             document.getElementById('reader').style.display = "none";
             document.getElementById('btnScanQR').innerText = "📷 Scan QR";
             document.getElementById('btnSearch').click();
-        }, function(error) { /* Abaikan error selama proses mencari fokus */ });
+        }, function(error) { });
     });
 
     // 4. PENCARIAN DATA & AUTO-FILL
@@ -295,14 +324,18 @@
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true; btn.innerText = "Menganalisis Lidah & Meracik Resep...";
         
+        // Ambil nilai keluhan (jika Lainnya, ambil dari input text manual)
+        const valKeluhan = document.getElementById('keluhanUtama').value;
+        const finalKeluhan = valKeluhan === "Lainnya" ? document.getElementById('keluhanManual').value : valKeluhan;
+
         const payload = {
             action: "insert", 
             nrm: document.getElementById('nrmKlien').value, 
             namaKlien: document.getElementById('namaKlien').value,
             noWa: document.getElementById('noWaKlien').value,
             tensi: document.getElementById('tensiKlien').value,
-            keluhan: document.getElementById('keluhanUtama').value,
-            gejala: document.getElementById('gejalaKlien').value, // <--- Sudah Mengambil Gejala Dinamis
+            keluhan: finalKeluhan,
+            gejala: document.getElementById('gejalaKlien').value, // <-- Diambil dari kotak teks (lengkap)
             wawancara: document.getElementById('dataWawancara').value,
             imageBase64: imageBase64Data
         };
