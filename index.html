@@ -66,10 +66,9 @@
         </div>
         <div class="form-row">
             <div class="form-col"><label>Nama Lengkap:</label><input type="text" id="namaKlien" required></div>
-            <div class="form-col"><label>No. WhatsApp:</label><input type="number" id="noWaKlien"></div>
+            <div class="form-col"><label>No. WhatsApp:</label><input type="text" id="noWaKlien"></div>
         </div>
         
-        <!-- BLOK KELUHAN (DENGAN OPSI LAINNYA) -->
         <label style="margin-top:15px;">Keluhan Utama:</label>
         <select id="keluhanUtama" required style="margin-bottom:10px;">
             <option value="" disabled selected>-- Pilih Keluhan Utama --</option>
@@ -87,21 +86,13 @@
             <option value="Lainnya">Lainnya... (Ketik Manual)</option>
         </select>
         
-        <!-- INPUT MANUAL JIKA PILIH LAINNYA -->
         <input type="text" id="keluhanManual" placeholder="Ketik keluhan utama pasien..." style="display:none; margin-bottom:15px;">
 
-        <!-- BLOK GEJALA (BISA TAMBAH MANUAL) -->
-        <label>Gejala Penyerta (Pilih & Tambahkan):</label>
-        <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <select id="gejalaDropdown" style="flex:1;">
-                <option value="" disabled selected>-- Pilih Panduan Gejala --</option>
-            </select>
-            <button type="button" id="btnTambahGejala" style="width:auto; padding:12px; background:#e67e22; border-radius:8px;">+ Tambah</button>
-        </div>
-        <textarea id="gejalaKlien" rows="2" placeholder="Ketik gejala tambahan di sini atau gunakan tombol tambah di atas..." required style="margin-bottom:15px;"></textarea>
+        <label>Rincian Gejala Pasien:</label>
+        <textarea id="gejalaKlien" rows="2" placeholder="Ketik rincian gejala penyerta secara bebas di sini..." required style="margin-bottom:15px;"></textarea>
 
-        <label>Catatan Wawancara (Anamnesis):</label>
-        <textarea id="dataWawancara" rows="5" placeholder="Panduan wawancara akan muncul otomatis di sini..." required></textarea>
+        <label>Catatan Wawancara (Fokus Emosi / Shen):</label>
+        <textarea id="dataWawancara" rows="3" placeholder="Gali kondisi psikis: Apakah sedang stres? Ada emosi tertahan? Bagaimana kualitas tidurnya?" required></textarea>
         
         <label style="margin-top:15px;">Unggah Foto Lidah:</label>
         <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
@@ -127,89 +118,29 @@
 </div>
 
 <script>
-    // ⚠️ PASTIKAN URL INI SESUAI DENGAN WEB APP TERBARU AKANG
+    // ⚠️ PASTIKAN URL INI SESUAI DENGAN WEB APP TERBARU AKANG (PENTING KARENA CODE.GS BERUBAH)
     const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
     
     let profilKlinik = {};
     let imageBase64Data = "";
     let dataPasienTerakhir = {};
 
-    // === DATABASE GEJALA & PANDUAN WAWANCARA ===
-    const dataGejala = {
-        "Gangguan Pencernaan (Maag, Diare, Cegukan)": ["Mual / Asam Lambung Naik", "Perut Kembung", "Diare (>3x sehari)", "Cegukan / Sendawa", "Sembelit"],
-        "Gangguan Pernapasan (Batuk, Asma, Sesak)": ["Batuk Kering", "Batuk Berdahak", "Sesak Napas / Mengi", "Sakit Tenggorokan"],
-        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": ["Nyeri/Kaku Jari Tangan", "Nyeri Tumit / Engkel", "Nyeri Pinggang", "Kaku Leher/Pundak"],
-        "Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)": ["Bengkak Leher (Tiroid / Gondok)", "Benjolan di Payudara (Kista / FAM)", "Benjolan Lunak (Lipoma)", "Benjolan Keras Sendi (Ganglion)"],
-        "THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)": ["Biduran / Kaligata", "Ruam Gatal", "Hidung Mampet (Sinus)", "Telinga Berdenging"],
-        "Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)": ["Penurunan Visus (Minus/Plus)", "Mata Merah/Kering", "Mata Berkabut (Katarak)", "Tekanan Mata Tinggi (Glaukoma)"],
-        "Gangguan Reproduksi & Kewanitaan (Haid, Promil)": ["Nyeri Haid Hebat", "Siklus Tidak Teratur", "Sensasi Panas (Menopause)", "Keputihan Abnormal"],
-        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": ["Ingin Program Diet", "Tengkuk Terasa Berat", "Sering Haus & Lapar", "Nyeri Sendi Kemerahan"],
-        "Gangguan Tidur & Emosi (Insomnia, Stres)": ["Sulit Memulai Tidur", "Terbangun Tengah Malam", "Mudah Marah / Cemas", "Dada Berdebar"],
-        "Gangguan Neurologis (Sakit Kepala, Vertigo)": ["Pusing Berputar (Vertigo)", "Sakit Kepala Sebelah", "Kelemahan Anggota Gerak", "Gemetar (Tremor)"],
-        "Sindrom Kelelahan & Penurunan Imun": ["Badan Sangat Berat", "Mudah Ngos-ngosan", "Keringat Dingin Keluar Sendiri", "Nafsu Makan Menurun"]
-    };
-
-    const panduanWawancara = {
-        "Gangguan Pencernaan (Maag, Diare, Cegukan)": "1. Nyeri/kembung membaik jika ditekan atau dihangatkan? :\n2. Bentuk feses (kering/lembek/cair/berbau tajam)? :\n3. Ada rasa pahit, asam, atau hambar di mulut? :\n4. Bagaimana nafsu makan dan rasa haus? : ",
-        "Gangguan Pernapasan (Batuk, Asma, Sesak)": "1. Warna dan bentuk dahak (putih/kuning, encer/kental)? :\n2. Sesak memburuk saat terkena dingin atau malam hari? :\n3. Apakah sering keluar keringat dingin/spontan? : ",
-        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": "1. Sifat nyeri (seperti ditusuk tajam / pegal / terasa sangat berat)? :\n2. Membaik jika dikompres hangat atau dingin? :\n3. Apakah nyerinya menetap atau berpindah-pindah? : ",
-        "Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)": "1. Benjolan teraba keras seperti batu atau lunak/kenyal? :\n2. Apakah membesar saat sedang stres atau menjelang haid? :\n3. Apakah terasa nyeri jika disentuh/ditekan? : ",
-        "THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)": "1. (Kulit) Apakah gatal memburuk saat cuaca dingin atau berkeringat? :\n2. (THT) Denging telinga suaranya bernada tinggi atau rendah/seperti ombak? :\n3. (Hidung) Ingus berwarna bening atau kuning kental? : ",
-        "Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)": "1. Mata terasa kering, perih, atau sering berair? :\n2. Apakah ada keluhan penyerta seperti pusing atau telinga berdenging? :\n3. Apakah sering bergadang atau kelelahan menatap layar? : ",
-        "Gangguan Reproduksi & Kewanitaan (Haid, Promil)": "1. Warna darah haid (merah pucat / gelap bergumpal)? :\n2. Nyeri haid membaik jika dikompres hangat? :\n3. Warna dan bau keputihan (jika ada)? : ",
-        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": "1. Apakah sering merasa sangat lapar atau sangat haus? :\n2. Apakah sering buang air kecil di malam hari? :\n3. Apakah badan/kaki sering terasa sangat berat? : ",
-        "Gangguan Tidur & Emosi (Insomnia, Stres)": "1. Sulit tertidur atau sering terbangun di tengah malam? :\n2. Apakah sering bermimpi buruk atau dada berdebar? :\n3. Apakah sedang banyak pikiran, mudah marah, atau mudah sedih? : ",
-        "Gangguan Neurologis (Sakit Kepala, Vertigo)": "1. Sakit kepala terasa berdenyut, berat, atau seperti diikat? :\n2. Vertigo memburuk saat perubahan posisi kepala? :\n3. Apakah ada rasa mual hebat saat serangan? : ",
-        "Sindrom Kelelahan & Penurunan Imun": "1. Apakah merasa pusing/berkunang-kunang saat bangkit berdiri? :\n2. Kapan rasa lelah paling parah (pagi/sore)? :\n3. Apakah telapak tangan dan kaki sering terasa dingin? : "
-    };
-
-    // FUNGSI DINAMIS KELUHAN, GEJALA, DAN LAINNYA
+    // 1. FUNGSI DINAMIS KELUHAN
     document.getElementById('keluhanUtama').addEventListener('change', function() {
         const keluhan = this.value;
-        const gejalaDropdown = document.getElementById('gejalaDropdown');
-        const wawancaraArea = document.getElementById('dataWawancara');
         const inputManual = document.getElementById('keluhanManual');
 
         if(keluhan === "Lainnya") {
             inputManual.style.display = "block";
             inputManual.required = true;
-            gejalaDropdown.innerHTML = '<option value="" disabled selected>-- Pilih Panduan Gejala --</option>';
-            wawancaraArea.value = "";
         } else {
             inputManual.style.display = "none";
             inputManual.required = false;
             inputManual.value = "";
-            
-            // Isi dropdown gejala
-            gejalaDropdown.innerHTML = '<option value="" disabled selected>-- Pilih Panduan Gejala --</option>';
-            if (dataGejala[keluhan]) {
-                dataGejala[keluhan].forEach(g => {
-                    const opt = document.createElement('option');
-                    opt.value = g;
-                    opt.textContent = g;
-                    gejalaDropdown.appendChild(opt);
-                });
-            }
-            
-            // Isi panduan wawancara
-            wawancaraArea.value = panduanWawancara[keluhan] || "";
         }
     });
 
-    // FUNGSI TOMBOL TAMBAH GEJALA KE KOTAK TEKS
-    document.getElementById('btnTambahGejala').addEventListener('click', function() {
-        const val = document.getElementById('gejalaDropdown').value;
-        if(val) {
-            const txt = document.getElementById('gejalaKlien');
-            if(txt.value.trim() === "") {
-                txt.value = val;
-            } else {
-                txt.value += ", " + val;
-            }
-        }
-    });
-
-    // 1. CEK KONFIGURASI SAAT HALAMAN DIBUKA
+    // 2. CEK KONFIGURASI SAAT HALAMAN DIBUKA
     window.onload = async function() {
         try {
             const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "getConfig" }) });
@@ -224,24 +155,17 @@
         } catch (e) { alert("Gagal memuat pengaturan. Cek koneksi."); }
     };
 
-    // 2. SIMPAN KONFIGURASI BARU
+    // 3. SIMPAN KONFIGURASI BARU
     document.getElementById('btnSaveConfig').addEventListener('click', async function() {
-        const payload = {
-            action: "setConfig",
-            nama: document.getElementById('confNama').value,
-            singkatan: document.getElementById('confSingkatan').value,
-            alamat: document.getElementById('confAlamat').value,
-            kontak: document.getElementById('confKontak').value
-        };
+        const payload = { action: "setConfig", nama: document.getElementById('confNama').value, singkatan: document.getElementById('confSingkatan').value, alamat: document.getElementById('confAlamat').value, kontak: document.getElementById('confKontak').value };
         if(!payload.nama || !payload.singkatan) return alert("Nama & Singkatan Wajib Diisi!");
-        
         this.innerText = "Menyimpan...";
         await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
         alert("Pengaturan Berhasil Disimpan! Halaman akan dimuat ulang.");
         location.reload();
     });
 
-    // 3. SCANNER QR CODE
+    // 4. SCANNER QR CODE
     let html5QrcodeScanner = null;
     document.getElementById('btnScanQR').addEventListener('click', function() {
         const readerDiv = document.getElementById('reader');
@@ -264,7 +188,7 @@
         }, function(error) { });
     });
 
-    // 4. PENCARIAN DATA & AUTO-FILL
+    // 5. PENCARIAN DATA & AUTO-FILL DENGAN NO WA
     document.getElementById('btnSearch').addEventListener('click', async function() {
         const keyword = document.getElementById('inputSearch').value;
         if(!keyword) return;
@@ -281,14 +205,16 @@
                     
                     let nrmAman = r.nrm.replace(/'/g, "\\'");
                     let namaAman = r.nama.replace(/'/g, "\\'");
+                    // Penanganan agar No WA yang diawali kutip tunggal dari Sheet bisa bersih
+                    let waAman = r.wa ? r.wa.toString().replace(/'/g, "") : ''; 
 
                     html += `<div class="history-card">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <b style="font-size:14px; color:#2c3e50;">[${r.nrm}] ${r.nama}</b>
-                                    <button type="button" onclick="pilihPasien('${nrmAman}', '${namaAman}')" style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; border-radius:6px; margin:0;">Pilih Pasien</button>
+                                    <button type="button" onclick="pilihPasien('${nrmAman}', '${namaAman}', '${waAman}')" style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; border-radius:6px; margin:0;">Pilih Pasien</button>
                                 </div>
                                 <span style="font-size:11px; color:#7f8c8d;">Kunjungan: ${tgl}</span><br>
-                                <span style="color:#555">Wawancara: ${r.wawancara}</span><br>
+                                <span style="color:#555">Emosi (Shen): ${r.wawancara}</span><br>
                                 <b style="color:#e74c3c">Diagnosis: ${r.diagnosis}</b>
                                 ${fotoHtml}
                              </div>`;
@@ -298,13 +224,18 @@
         } catch(e) { resDiv.innerHTML = "Error jaringan."; }
     });
 
-    window.pilihPasien = function(nrm, nama) {
+    // FUNGSI PENGISIAN OTOMATIS (AUTO-FILL)
+    window.pilihPasien = function(nrm, nama, wa) {
         document.getElementById('nrmKlien').value = nrm;
         document.getElementById('namaKlien').value = nama;
+        document.getElementById('noWaKlien').value = wa; // <--- No WA Terisi Otomatis!
+        
+        // Mengisi panduan singkat di kotak wawancara
+        document.getElementById('dataWawancara').value = "1. Beban Pikiran/Stres : \n2. Emosi Tertahan : \n3. Kualitas Tidur : ";
         document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
     };
 
-    // 5. PREVIEW GAMBAR
+    // 6. PREVIEW GAMBAR
     document.getElementById('fotoLidah').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -318,13 +249,12 @@
         }
     });
 
-    // 6. SUBMIT DATA & GENERATE QR
+    // 7. SUBMIT DATA & GENERATE QR
     document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true; btn.innerText = "Menganalisis Lidah & Meracik Resep...";
         
-        // Ambil nilai keluhan (jika Lainnya, ambil dari input text manual)
         const valKeluhan = document.getElementById('keluhanUtama').value;
         const finalKeluhan = valKeluhan === "Lainnya" ? document.getElementById('keluhanManual').value : valKeluhan;
 
@@ -335,7 +265,7 @@
             noWa: document.getElementById('noWaKlien').value,
             tensi: document.getElementById('tensiKlien').value,
             keluhan: finalKeluhan,
-            gejala: document.getElementById('gejalaKlien').value, // <-- Diambil dari kotak teks (lengkap)
+            gejala: document.getElementById('gejalaKlien').value, 
             wawancara: document.getElementById('dataWawancara').value,
             imageBase64: imageBase64Data
         };
@@ -372,12 +302,9 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan"; }
     });
 
-    // 7. KIRIM WA WHITE-LABEL & AUTO-COPY (BUKA DI TAB BARU)
+    // 8. KIRIM WA WHITE-LABEL & AUTO-COPY
     document.getElementById('btnWA').addEventListener('click', function() {
-        if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
-            alert("Belum ada data diagnosis pasien yang bisa dikirim.");
-            return;
-        }
+        if (!dataPasienTerakhir || !dataPasienTerakhir.nama) { alert("Belum ada data diagnosis pasien yang bisa dikirim."); return; }
 
         let noWa = document.getElementById('noWaKlien').value;
         if (noWa) {
