@@ -18,11 +18,10 @@
         button { width: 100%; padding: 14px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:disabled { background: #95a5a6; }
         .btn-wa { background: #25D366; margin-top: 15px; }
-        .btn-reset { background: #95a5a6; margin-top: 10px; } /* Gaya tombol reset */
+        .btn-reset { background: #95a5a6; margin-top: 10px; } 
         .btn-scan { background: #e67e22; width: auto; padding: 12px 15px; }
         .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
         
-        /* SCROLLBAR UNTUK PENCARIAN */
         #searchResults { max-height: 320px; overflow-y: auto; padding-right: 8px; }
         #searchResults::-webkit-scrollbar { width: 6px; }
         #searchResults::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 10px; }
@@ -37,7 +36,6 @@
 </head>
 <body>
 
-<!-- MODAL PENGATURAN KLINIK -->
 <div id="modalConfig">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#2c3e50;">⚙️ Setup Profil Klinik</h3>
@@ -53,7 +51,6 @@
 <div class="container" id="mainApp" style="display:none;">
     <h2 id="judulKlinik">Klinik TCM</h2>
 
-    <!-- PANEL PENCARIAN & SCANNER -->
     <div class="search-box">
         <h4 style="margin-top:0; color:#2980b9;">🔍 Pencarian & Scan QR Pasien</h4>
         <div style="display: flex; gap: 10px;">
@@ -65,10 +62,8 @@
         <div id="searchResults"></div>
     </div>
 
-    <!-- FORM MEDIS -->
     <form id="formKlinis">
         <div class="form-row">
-            <!-- NRM DIKUNCI (READONLY) AGAR TERAPIS TIDAK SALAH KETIK -->
             <div class="form-col"><label>NRM (Pasien Baru Otomatis):</label><input type="text" id="nrmKlien" placeholder="Otomatis diisi sistem" readonly style="background-color: #f1f3f5; cursor: not-allowed;"></div>
             <div class="form-col"><label>Tensi Darah:</label><input type="text" id="tensiKlien" placeholder="120/80"></div>
         </div>
@@ -103,13 +98,13 @@
         <textarea id="dataWawancara" rows="3" placeholder="Gali kondisi psikis: Apakah sedang stres? Ada emosi tertahan? Bagaimana kualitas tidurnya?" required></textarea>
         
         <label style="margin-top:15px;">Unggah Foto Lidah:</label>
-        <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
+        <!-- PENGHAPUSAN CAPTURE=ENVIRONMENT AGAR BISA BUKA GALERI DI ANDROID -->
+        <input type="file" id="fotoLidah" accept="image/*" required>
         <img id="previewGambar" class="image-preview">
 
         <button type="submit" id="btnSubmit" style="margin-top:20px;">Analisis AI & Simpan</button>
     </form>
 
-    <!-- HASIL DIAGNOSIS & QR -->
     <div id="hasilContainer" style="display:none; margin-top:30px; border-top:2px dashed #ccc; padding-top:20px;">
         <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil Disimpan!</h3>
         
@@ -123,7 +118,7 @@
         <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
         
         <button type="button" id="btnWA" class="btn-wa">Kirim Edukasi via WA</button>
-        <!-- TOMBOL BERSIHKAN FORM / RESET -->
+        <!-- TOMBOL RESET KEMBALI DIMUNCULKAN -->
         <button type="button" id="btnReset" class="btn-reset">🔄 Pendaftaran Pasien Baru</button>
     </div>
 </div>
@@ -136,7 +131,6 @@
     let imageBase64Data = "";
     let dataPasienTerakhir = {};
 
-    // 1. FUNGSI DINAMIS KELUHAN
     document.getElementById('keluhanUtama').addEventListener('change', function() {
         const keluhan = this.value;
         const inputManual = document.getElementById('keluhanManual');
@@ -151,7 +145,6 @@
         }
     });
 
-    // 2. CEK KONFIGURASI SAAT HALAMAN DIBUKA
     window.onload = async function() {
         try {
             const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "getConfig" }) });
@@ -166,7 +159,6 @@
         } catch (e) { alert("Gagal memuat pengaturan. Cek koneksi."); }
     };
 
-    // 3. SIMPAN KONFIGURASI BARU
     document.getElementById('btnSaveConfig').addEventListener('click', async function() {
         const payload = { action: "setConfig", nama: document.getElementById('confNama').value, singkatan: document.getElementById('confSingkatan').value, alamat: document.getElementById('confAlamat').value, kontak: document.getElementById('confKontak').value };
         if(!payload.nama || !payload.singkatan) return alert("Nama & Singkatan Wajib Diisi!");
@@ -176,7 +168,6 @@
         location.reload();
     });
 
-    // 4. SCANNER QR CODE
     let html5QrcodeScanner = null;
     document.getElementById('btnScanQR').addEventListener('click', function() {
         const readerDiv = document.getElementById('reader');
@@ -199,7 +190,6 @@
         }, function(error) { });
     });
 
-    // 5. PENCARIAN DATA & AUTO-FILL DENGAN NO WA
     document.getElementById('btnSearch').addEventListener('click', async function() {
         const keyword = document.getElementById('inputSearch').value;
         if(!keyword) return;
@@ -234,7 +224,6 @@
         } catch(e) { resDiv.innerHTML = "Error jaringan."; }
     });
 
-    // FUNGSI PENGISIAN OTOMATIS (AUTO-FILL)
     window.pilihPasien = function(nrm, nama, wa) {
         document.getElementById('nrmKlien').value = nrm;
         document.getElementById('namaKlien').value = nama;
@@ -243,7 +232,6 @@
         document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
     };
 
-    // 6. PREVIEW GAMBAR
     document.getElementById('fotoLidah').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -257,7 +245,6 @@
         }
     });
 
-    // 7. SUBMIT DATA & GENERATE QR
     document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
@@ -286,7 +273,7 @@
                 const rd = result.data;
                 dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
-            // Memformat Makanan agar judul bernomor ditebalkan (Bold) dengan jarak baris
+                // FORMAT MAKANAN UNTUK LAYAR WEB (ANGKA TEBAL)
                 let formatMakananWeb = rd.makanan;
                 if (formatMakananWeb.includes("1. Anjuran")) {
                     formatMakananWeb = formatMakananWeb
@@ -319,7 +306,6 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan"; }
     });
 
-    // 8. KIRIM WA WHITE-LABEL & AUTO-COPY
     document.getElementById('btnWA').addEventListener('click', function() {
         if (!dataPasienTerakhir || !dataPasienTerakhir.nama) { alert("Belum ada data diagnosis pasien yang bisa dikirim."); return; }
 
@@ -329,10 +315,10 @@
             if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1); 
         }
 
-         const namaKlinik = profilKlinik.nama || "Klinik TCM";
+        const namaKlinik = profilKlinik.nama || "Klinik TCM";
         const alamatKlinik = profilKlinik.alamat || "";
 
-        // Memformat Makanan agar judul bernomor ditebalkan di WhatsApp
+        // FORMAT MAKANAN UNTUK WA (ANGKA TEBAL DENGAN BINTANG)
         let formatMakananWA = dataPasienTerakhir.makanan;
         if (formatMakananWA.includes("1. Anjuran")) {
             formatMakananWA = formatMakananWA
@@ -341,7 +327,8 @@
                 .replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '\n\n*3. Keseimbangan Termal:*');
         }
 
-        const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${formatMakananWA}\n\n_Semoga lekas sembuh!_`;        
+        const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${formatMakananWA}\n\n_Semoga lekas sembuh!_`;
+        
         let waUrl = noWa && noWa.length >= 9 
             ? `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}` 
             : `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
@@ -353,31 +340,21 @@
         window.open(waUrl, '_blank');
     });
 
-    // 9. FUNGSI RESET FORM UNTUK PASIEN BARU
+    // FUNGSI RESET FORM UNTUK PASIEN BARU
     document.getElementById('btnReset').addEventListener('click', function() {
         if(confirm("Apakah Anda yakin ingin membersihkan form untuk mendaftar pasien baru?")) {
-            // Bersihkan semua input form
             document.getElementById('formKlinis').reset();
             
-            // Bersihkan variabel di belakang layar
             imageBase64Data = "";
             dataPasienTerakhir = {};
             
-            // Sembunyikan foto lidah yang sebelumnya tampil
             document.getElementById('previewGambar').style.display = 'none';
             document.getElementById('previewGambar').src = '';
-            
-            // Sembunyikan input keluhan manual jika ada
             document.getElementById('keluhanManual').style.display = 'none';
-            
-            // Sembunyikan kotak hasil diagnosis dan QR Code
             document.getElementById('hasilContainer').style.display = 'none';
-            
-            // Bersihkan kotak pencarian dan hasil pencarian
             document.getElementById('inputSearch').value = '';
             document.getElementById('searchResults').innerHTML = '';
             
-            // Gulir layar ke paling atas
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     });
