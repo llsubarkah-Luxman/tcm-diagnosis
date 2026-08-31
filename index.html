@@ -206,6 +206,15 @@
                     let namaAman = r.nama.replace(/'/g, "\\'");
                     let waAman = r.wa ? r.wa.toString().replace(/'/g, "") : ''; 
 
+                    // Merapikan format makanan riwayat agar tebal
+                    let formatMakananRiwayat = r.makanan;
+                    if (formatMakananRiwayat && formatMakananRiwayat.includes("1. Anjuran")) {
+                        formatMakananRiwayat = formatMakananRiwayat
+                            .replace(/1\.\s*Anjuran\s*:/gi, '<b>1. Anjuran:</b>')
+                            .replace(/2\.\s*Pantangan\s*:/gi, '<br><b>2. Pantangan:</b>')
+                            .replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '<br><b>3. Keseimbangan Termal:</b>');
+                    }
+
                     html += `<div class="history-card">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <b style="font-size:14px; color:#2c3e50;">[${r.nrm}] ${r.nama}</b>
@@ -223,7 +232,9 @@
                                         <b>🧠 YNSA:</b> ${r.yamamoto}<br>
                                         <b>🤲 Tuina:</b> ${r.tuina}<br>
                                         <b>🔴 Bekam:</b> ${r.bekam}<br>
-                                        <b>🌿 Jamu:</b> ${r.jamu}
+                                        <b>🌿 Jamu:</b> ${r.jamu}<hr style="border: 0.5px solid #ddd; margin:10px 0;">
+                                        <b>🏃 Gerak:</b> ${r.gerak}<br><br>
+                                        <b>🥗 Makanan:</b> ${formatMakananRiwayat}
                                     </div>
                                 </details>
 
@@ -260,9 +271,7 @@
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
 
-        // ==========================================
-        // ALARM ANTI-DUPLIKASI DITAMBAHKAN DI SINI
-        // ==========================================
+        // ALARM ANTI-DUPLIKASI
         if(document.getElementById('nrmKlien').value === "") {
             const konfirmasi = confirm("⚠️ NRM KOSONG!\n\nSistem akan mendaftarkan ini sebagai PASIEN BARU dan membuat NRM baru.\n\nApakah Anda yakin ini pasien baru?\n(Jika ini Pasien Lama, klik BATAL lalu gunakan kotak Pencarian di atas).");
             if(!konfirmasi) {
