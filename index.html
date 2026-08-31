@@ -18,12 +18,24 @@
         button { width: 100%; padding: 14px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:disabled { background: #95a5a6; }
         .btn-wa { background: #25D366; margin-top: 15px; }
-        .btn-reset { background: #95a5a6; margin-top: 10px; } 
         .image-preview { width: 100%; max-height: 180px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; border: 2px dashed #bdc3c7; padding: 5px; }
         .section-title { margin-top: 25px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #3498db; color: #2980b9; font-size: 16px; font-weight:bold; }
+        /* Modal Webcam */
+        #webcamModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; flex-direction:column; align-items:center; justify-content:center; }
+        #webcamVideo { width:90%; max-width:500px; border-radius:8px; border: 3px solid #fff; }
     </style>
 </head>
 <body>
+
+<div id="webcamModal">
+    <h3 id="webcamTitle" style="color:#fff; margin-bottom:15px;">Kamera Perangkat</h3>
+    <video id="webcamVideo" autoplay playsinline></video>
+    <div style="display:flex; gap:15px; margin-top:20px;">
+        <button type="button" id="btnCapture" style="background:#27ae60; width:150px;">📸 Ambil Foto</button>
+        <button type="button" id="btnCloseWebcam" style="background:#e74c3c; width:150px;">❌ Batal</button>
+    </div>
+    <canvas id="webcamCanvas" style="display:none;"></canvas>
+</div>
 
 <div class="container" id="mainApp">
     <h2>Klinik TCM & Iridologi</h2>
@@ -31,7 +43,7 @@
     <form id="formKlinis">
         <div class="section-title">👤 Profil Klien</div>
         <div class="form-row">
-            <div class="form-col"><label>NRM:</label><input type="text" id="nrmKlien" placeholder="Otomatis" readonly style="background-color: #f1f3f5;"></div>
+            <div class="form-col"><label>NRM:</label><input type="text" id="nrmKlien" placeholder="Kosongkan jika baru" readonly style="background-color: #f1f3f5;"></div>
             <div class="form-col"><label>Tensi & Nadi:</label><input type="text" id="tensiKlien" placeholder="Contoh: 120/80/80"></div>
         </div>
         <div class="form-row">
@@ -51,102 +63,212 @@
             <option value="Gangguan Pencernaan (Maag, Diare, Cegukan)">Gangguan Pencernaan (Maag, Diare, Cegukan)</option>
             <option value="Gangguan Pernapasan (Batuk, Asma, Sesak)">Gangguan Pernapasan (Batuk, Asma, Sesak)</option>
             <option value="Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)">Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)</option>
+            <option value="Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)">Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)</option>
+            <option value="THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)">THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)</option>
+            <option value="Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)">Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)</option>
+            <option value="Gangguan Reproduksi & Kewanitaan (Haid, Promil)">Gangguan Reproduksi & Kewanitaan (Haid, Promil)</option>
             <option value="Metabolik & Diet (Gula, Asam Urat, Obesitas)">Metabolik & Diet (Gula, Asam Urat, Obesitas)</option>
+            <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
+            <option value="Gangguan Neurologis (Sakit Kepala, Vertigo)">Gangguan Neurologis (Sakit Kepala, Vertigo)</option>
+            <option value="Sindrom Kelelahan & Penurunan Imun">Sindrom Kelelahan & Penurunan Imun</option>
+            <option value="Lainnya">Lainnya... (Ketik Manual)</option>
         </select>
         
-        <label>Gejala Penyerta:</label>
-        <select id="gejalaKlien" required style="margin-bottom:15px;">
-            <option value="" disabled selected>-- Pilih Gejala --</option>
-        </select>
+        <input type="text" id="keluhanManual" placeholder="Ketik keluhan utama pasien..." style="display:none; margin-bottom:15px;">
 
-        <label>Catatan Wawancara (Anamnesis):</label>
-        <textarea id="dataWawancara" rows="4" required></textarea>
+        <label>Rincian Gejala Penyerta:</label>
+        <textarea id="gejalaKlien" rows="2" placeholder="Pilih keluhan utama untuk melihat contoh gejala..." required style="margin-bottom:15px;"></textarea>
+
+        <label>Catatan Wawancara (Fokus Emosi / Shen):</label>
+        <textarea id="dataWawancara" rows="4" required>1. Beban Pikiran/Stres : 
+2. Emosi Tertahan : 
+3. Kualitas Tidur : </textarea>
         
         <div class="section-title">📸 Modul AI Vision (Lidah & Iris Ganda)</div>
         
         <!-- Foto Lidah -->
         <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px;">
             <label>1. Foto Lidah (Wajib):</label>
-            <input type="file" id="fotoLidah" accept="image/*" required style="margin-top:5px;">
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="file" id="fotoLidah" accept="image/*" required style="flex:1;">
+                <button type="button" onclick="bukaWebcam('lidah')" style="width:auto; padding:10px 15px; background:#8e44ad;">📷 Kamera</button>
+            </div>
             <img id="previewLidah" class="image-preview">
         </div>
 
         <!-- Foto Iris Kiri & Kanan -->
         <div class="form-row">
             <div class="form-col" style="background:#e8f4f8; padding:15px; border-radius:8px;">
-                <label>2. Foto Iris Mata KIRI (Opsional):</label>
-                <input type="file" id="fotoIrisKiri" accept="image/*" style="margin-top:5px;">
+                <label>2. Iris KIRI (Opsional):</label>
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <input type="file" id="fotoIrisKiri" accept="image/*">
+                    <button type="button" onclick="bukaWebcam('irisKiri')" style="padding:8px 12px; font-size:13px; background:#2980b9;">👁️ Kamera Kiri</button>
+                </div>
                 <img id="previewIrisKiri" class="image-preview">
             </div>
             <div class="form-col" style="background:#e8f4f8; padding:15px; border-radius:8px;">
-                <label>3. Foto Iris Mata KANAN (Opsional):</label>
-                <input type="file" id="fotoIrisKanan" accept="image/*" style="margin-top:5px;">
+                <label>3. Iris KANAN (Opsional):</label>
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <input type="file" id="fotoIrisKanan" accept="image/*">
+                    <button type="button" onclick="bukaWebcam('irisKanan')" style="padding:8px 12px; font-size:13px; background:#2980b9;">👁️ Kamera Kanan</button>
+                </div>
                 <img id="previewIrisKanan" class="image-preview">
             </div>
         </div>
 
         <button type="submit" id="btnSubmit" style="margin-top:25px;">Analisis AI & Simpan Rekam Medis</button>
     </form>
+    
+    <div id="hasilContainer" style="display:none; margin-top:30px; border-top:2px dashed #ccc; padding-top:20px;">
+        <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil Disimpan!</h3>
+        <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
+    </div>
 </div>
 
 <script>
-    // Database Gejala dengan pemisahan Cegukan dan Sendawa
-    const dataGejala = {
-        "Gangguan Pencernaan (Maag, Diare, Cegukan)": [
-            "Mual / Asam Lambung Naik", 
-            "Perut Kembung", 
-            "Diare (>3x sehari)", 
-            "Cegukan Terus-Menerus", 
-            "Sendawa Sering", 
-            "Sembelit"
-        ],
-        "Gangguan Pernapasan (Batuk, Asma, Sesak)": ["Batuk Kering", "Batuk Berdahak", "Sesak Napas / Mengi", "Sakit Tenggorokan"],
-        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": ["Nyeri/Kaku Jari Tangan", "Nyeri Tumit / Engkel", "Nyeri Pinggang", "Kaku Leher/Pundak"],
-        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": ["Ingin Program Diet / Turunkan Berat Badan", "Tengkuk Terasa Berat", "Sering Haus & Lapar", "Nyeri Sendi Kemerahan"]
-    };
+    // MASUKKAN URL APP SCRIPT ANDA DI SINI
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
 
-    const panduanWawancara = {
-        "Gangguan Pencernaan (Maag, Diare, Cegukan)": "1. Nyeri/kembung membaik jika ditekan atau dihangatkan? :\n2. Bentuk feses (kering/lembek/cair)? :\n3. Frekuensi cegukan atau sendawa? :\n4. Apakah ada stres/banyak pikiran? : "
+    // --- Saran Placeholder Dinamis untuk Gejala ---
+    const saranGejala = {
+        "Gangguan Pencernaan (Maag, Diare, Cegukan)": "Contoh: Mual, asam lambung naik, perut kembung, diare >3x, atau sering cegukan/sendawa...",
+        "Gangguan Pernapasan (Batuk, Asma, Sesak)": "Contoh: Batuk kering/berdahak, sesak napas, sakit tenggorokan...",
+        "Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)": "Contoh: Nyeri pinggang, kaku leher, jari kaku, lutut sakit...",
+        "Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)": "Contoh: Benjolan di leher (tiroid), payudara, atau sendi...",
+        "THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)": "Contoh: Biduran, gatal-gatal, hidung mampet, telinga berdenging...",
+        "Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)": "Contoh: Pandangan kabur, mata merah, katarak, glaukoma...",
+        "Gangguan Reproduksi & Kewanitaan (Haid, Promil)": "Contoh: Nyeri haid hebat, siklus tidak teratur, keputihan...",
+        "Metabolik & Diet (Gula, Asam Urat, Obesitas)": "Contoh: Berat badan berlebih, tengkuk berat, sering haus/lapar...",
+        "Gangguan Tidur & Emosi (Insomnia, Stres)": "Contoh: Sulit tidur, sering terbangun, dada berdebar, cemas...",
+        "Gangguan Neurologis (Sakit Kepala, Vertigo)": "Contoh: Vertigo berputar, migrain, tangan gemetar (tremor)...",
+        "Sindrom Kelelahan & Penurunan Imun": "Contoh: Badan sangat berat, mudah lelah, keringat dingin..."
     };
 
     document.getElementById('keluhanUtama').addEventListener('change', function() {
         const keluhan = this.value;
-        const gejalaSelect = document.getElementById('gejalaKlien');
-        gejalaSelect.innerHTML = '<option value="" disabled selected>-- Pilih Gejala --</option>';
-        if (dataGejala[keluhan]) {
-            dataGejala[keluhan].forEach(g => {
-                const opt = document.createElement('option');
-                opt.value = g; opt.textContent = g;
-                gejalaSelect.appendChild(opt);
-            });
-        }
-        if (panduanWawancara[keluhan]) {
-            document.getElementById('dataWawancara').value = panduanWawancara[keluhan];
+        const inputManual = document.getElementById('keluhanManual');
+        const gejalaBox = document.getElementById('gejalaKlien');
+
+        if(keluhan === "Lainnya") {
+            inputManual.style.display = "block";
+            inputManual.required = true;
+            gejalaBox.placeholder = "Ketik rincian gejala...";
+        } else {
+            inputManual.style.display = "none";
+            inputManual.required = false;
+            inputManual.value = "";
+            gejalaBox.placeholder = saranGejala[keluhan] || "Ketik rincian gejala...";
         }
     });
 
     let base64Lidah = "", base64IrisKiri = "", base64IrisKanan = "";
+    let videoStream = null;
+    let currentCamTarget = "";
 
-    function convertToBase64(inputElement, previewElement, callback) {
-        if(inputElement.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                previewElement.src = evt.target.result;
-                previewElement.style.display = 'block';
-                callback(evt.target.result);
-            }
-            reader.readAsDataURL(inputElement.files[0]);
+    async function bukaWebcam(target) {
+        currentCamTarget = target;
+        let title = target === 'lidah' ? "📸 Foto Lidah" : target === 'irisKiri' ? "👁️ Iris Kiri" : "👁️ Iris Kanan";
+        document.getElementById('webcamTitle').innerText = title;
+        document.getElementById('webcamModal').style.display = 'flex';
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            document.getElementById('webcamVideo').srcObject = videoStream;
+        } catch (err) {
+            alert("Gagal mengakses kamera.");
+            document.getElementById('webcamModal').style.display = 'none';
         }
     }
 
-    document.getElementById('fotoLidah').addEventListener('change', function() {
-        convertToBase64(this, document.getElementById('previewLidah'), (res) => base64Lidah = res);
+    document.getElementById('btnCloseWebcam').addEventListener('click', function() {
+        if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); }
+        document.getElementById('webcamModal').style.display = 'none';
     });
-    document.getElementById('fotoIrisKiri').addEventListener('change', function() {
-        convertToBase64(this, document.getElementById('previewIrisKiri'), (res) => base64IrisKiri = res);
+
+    document.getElementById('btnCapture').addEventListener('click', function() {
+        const video = document.getElementById('webcamVideo');
+        const canvas = document.getElementById('webcamCanvas');
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        let b64 = canvas.toDataURL('image/jpeg');
+        if(currentCamTarget === 'lidah') {
+            base64Lidah = b64;
+            document.getElementById('previewLidah').src = b64; document.getElementById('previewLidah').style.display = 'block';
+            document.getElementById('fotoLidah').required = false;
+        } else if (currentCamTarget === 'irisKiri') {
+            base64IrisKiri = b64;
+            document.getElementById('previewIrisKiri').src = b64; document.getElementById('previewIrisKiri').style.display = 'block';
+        } else {
+            base64IrisKanan = b64;
+            document.getElementById('previewIrisKanan').src = b64; document.getElementById('previewIrisKanan').style.display = 'block';
+        }
+        if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); }
+        document.getElementById('webcamModal').style.display = 'none';
     });
-    document.getElementById('fotoIrisKanan').addEventListener('change', function() {
-        convertToBase64(this, document.getElementById('previewIrisKanan'), (res) => base64IrisKanan = res);
+
+    function handleFile(inputElement, previewElement, callback) {
+        inputElement.addEventListener('change', function(e) {
+            if(e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewElement.src = evt.target.result;
+                    previewElement.style.display = 'block';
+                    callback(evt.target.result);
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+    }
+
+    handleFile(document.getElementById('fotoLidah'), document.getElementById('previewLidah'), res => base64Lidah = res);
+    handleFile(document.getElementById('fotoIrisKiri'), document.getElementById('previewIrisKiri'), res => base64IrisKiri = res);
+    handleFile(document.getElementById('fotoIrisKanan'), document.getElementById('previewIrisKanan'), res => base64IrisKanan = res);
+
+    document.getElementById('formKlinis').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true; btn.innerText = "🧠 Memproses AI...";
+        
+        const valKeluhan = document.getElementById('keluhanUtama').value;
+        const finalKeluhan = valKeluhan === "Lainnya" ? document.getElementById('keluhanManual').value : valKeluhan;
+
+        const payload = {
+            action: "insert", 
+            nrm: document.getElementById('nrmKlien').value, 
+            namaKlien: document.getElementById('namaKlien').value,
+            noWa: document.getElementById('noWaKlien').value,
+            umur: document.getElementById('umurKlien').value,
+            gender: document.getElementById('genderKlien').value,
+            berat: document.getElementById('beratKlien').value,
+            tensi: document.getElementById('tensiKlien').value,
+            keluhan: finalKeluhan,
+            gejala: document.getElementById('gejalaKlien').value, 
+            wawancara: document.getElementById('dataWawancara').value,
+            imgLidah: base64Lidah,
+            imgIrisKiri: base64IrisKiri,
+            imgIrisKanan: base64IrisKanan
+        };
+
+        try {
+            const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.json();
+            if (result.status === "sukses") {
+                const rd = result.data;
+                document.getElementById('resLengkap').innerHTML = `
+                    <b style="color:#8e44ad; font-size:15px;">👁️ Iridologi Kiri:</b> ${rd.iris_kiri || "-"}<br>
+                    <b style="color:#8e44ad; font-size:15px;">👁️ Iridologi Kanan:</b> ${rd.iris_kanan || "-"}<hr style="border: 0.5px solid #eee;">
+                    <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
+                    <i style="color:#555;">${rd.penjelasan}</i><hr style="border: 0.5px solid #eee; margin:15px 0;">
+                    <b>🎯 Tung:</b> ${rd.tung}<br><br>
+                    <b>⚖️ Tan:</b> ${rd.tan}<br><br>
+                    <b>🤲 Tuina:</b> ${rd.tuina}<br><br>
+                    <b>🌿 Jamu:</b> ${rd.jamu}<hr style="border: 0.5px solid #eee; margin:15px 0;">
+                    <b>🥗 Makanan:</b> ${rd.makanan}
+                `;
+                document.getElementById('hasilContainer').style.display = "block"; 
+            } else { alert("Gagal: " + result.pesan); }
+        } catch (e) { alert("Server Sibuk."); } 
+        finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan"; }
     });
 </script>
 </body>
