@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Klinik TCM</title>
+    <title>Sistem Klinik TCM - AI Iridologi</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 650px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
@@ -17,341 +15,199 @@
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: 'Poppins'; font-size: 14px; box-sizing: border-box; }
         button { width: 100%; padding: 14px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:disabled { background: #95a5a6; }
-        .btn-wa { background: #25D366; margin-top: 15px; }
-        .btn-reset { background: #95a5a6; margin-top: 10px; } 
-        .btn-scan { background: #e67e22; width: auto; padding: 12px 15px; }
         .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
-        
-        #searchResults { max-height: 320px; overflow-y: auto; padding-right: 8px; }
-        #searchResults::-webkit-scrollbar { width: 6px; }
-        #searchResults::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 10px; }
-        
-        .history-card { background: #fff; padding: 15px; margin-top: 10px; border-left: 4px solid #3498db; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 6px; }
-        .image-preview { width: 100%; max-height: 250px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; }
+        .history-card { background: #fff; padding: 15px; margin-top: 10px; border-left: 4px solid #3498db; font-size: 13px; border-radius: 6px; }
+        .image-preview { width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; border: 2px dashed #bdc3c7; }
+        .section-title { margin-top: 25px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #3498db; color: #2980b9; font-size: 16px; }
         #modalConfig { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
         .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
-        #qrOutput { margin-top: 15px; padding: 15px; background: #f9f9f9; text-align: center; border-radius: 8px; border: 2px dashed #ccc; display: none; }
-        #reader { width: 100%; margin-top: 15px; display: none; }
-        
-        /* Modal Webcam */
-        #webcamModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; flex-direction:column; align-items:center; justify-content:center; }
-        #webcamVideo { width:90%; max-width:500px; border-radius:8px; border: 3px solid #fff; }
     </style>
 </head>
 <body>
 
 <div id="modalConfig">
     <div class="modal-content">
-        <h3 style="margin-top:0; color:#2c3e50;">⚙️ Setup Profil Klinik</h3>
-        <p style="font-size:13px; color:#7f8c8d;">Isi data ini untuk awalan NRM dan Kop WhatsApp.</p>
-        <div style="margin-bottom:10px;"><input type="text" id="confNama" placeholder="Nama Klinik / Terapis"></div>
-        <div style="margin-bottom:10px;"><input type="text" id="confSingkatan" placeholder="Singkatan NRM (Misal: TCM)" maxlength="4"></div>
-        <div style="margin-bottom:10px;"><input type="text" id="confAlamat" placeholder="Alamat Praktik"></div>
-        <div style="margin-bottom:15px;"><input type="text" id="confKontak" placeholder="No. WA Klinik"></div>
+        <h3 style="margin-top:0;">⚙️ Setup Profil Klinik</h3>
+        <input type="text" id="confNama" placeholder="Nama Klinik" style="margin-bottom:10px;">
+        <input type="text" id="confSingkatan" placeholder="Singkatan NRM (TCM)" style="margin-bottom:10px;" maxlength="4">
+        <input type="text" id="confAlamat" placeholder="Alamat Praktik" style="margin-bottom:10px;">
+        <input type="text" id="confKontak" placeholder="No. WA Klinik" style="margin-bottom:15px;">
         <button id="btnSaveConfig">Simpan Konfigurasi</button>
     </div>
-</div>
-
-<!-- KOTAK WEBCAM LAPTOP -->
-<div id="webcamModal">
-    <h3 style="color:#fff; margin-bottom:15px;">Kamera Laptop / Perangkat</h3>
-    <video id="webcamVideo" autoplay playsinline></video>
-    <div style="display:flex; gap:15px; margin-top:20px;">
-        <button type="button" id="btnCapture" style="background:#27ae60; width:150px;">📸 Ambil Foto</button>
-        <button type="button" id="btnCloseWebcam" style="background:#e74c3c; width:150px;">❌ Batal</button>
-    </div>
-    <canvas id="webcamCanvas" style="display:none;"></canvas>
 </div>
 
 <div class="container" id="mainApp" style="display:none;">
     <h2 id="judulKlinik">Klinik TCM</h2>
 
     <div class="search-box">
-        <h4 style="margin-top:0; color:#2980b9;">🔍 Pencarian & Scan QR Pasien</h4>
+        <h4 style="margin-top:0; color:#2980b9;">🔍 Cari Riwayat Pasien Lama</h4>
         <div style="display: flex; gap: 10px;">
             <input type="text" id="inputSearch" placeholder="Ketik NRM atau Nama...">
             <button type="button" id="btnSearch" style="width: 80px;">Cari</button>
-            <button type="button" id="btnScanQR" class="btn-scan">📷 Scan</button>
         </div>
-        <div id="reader"></div>
         <div id="searchResults"></div>
     </div>
 
     <form id="formKlinis">
+        <div class="section-title">👤 Profil Dasar (Statik)</div>
         <div class="form-row">
-            <div class="form-col"><label>NRM (Pasien Baru Otomatis):</label><input type="text" id="nrmKlien" placeholder="Otomatis diisi sistem" readonly style="background-color: #f1f3f5; cursor: not-allowed;"></div>
-            <div class="form-col"><label>Tensi Darah:</label><input type="text" id="tensiKlien" placeholder="120/80"></div>
-        </div>
-        <div class="form-row">
+            <div class="form-col"><label>NRM:</label><input type="text" id="nrmKlien" placeholder="Kosongkan jika Baru" readonly style="background:#f1f3f5;"></div>
             <div class="form-col"><label>Nama Lengkap:</label><input type="text" id="namaKlien" required></div>
-            <div class="form-col"><label>No. WhatsApp:</label><input type="text" id="noWaKlien"></div>
         </div>
-        
-        <label style="margin-top:15px;">Keluhan Utama:</label>
-        <select id="keluhanUtama" required style="margin-bottom:10px;">
-            <option value="" disabled selected>-- Pilih Keluhan Utama --</option>
-            <option value="Gangguan Pencernaan (Maag, Diare, Cegukan)">Gangguan Pencernaan (Maag, Diare, Cegukan)</option>
-            <option value="Gangguan Pernapasan (Batuk, Asma, Sesak)">Gangguan Pernapasan (Batuk, Asma, Sesak)</option>
-            <option value="Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)">Nyeri Otot, Sendi & Saraf (Pinggang, Jari, Tumit, dll)</option>
-            <option value="Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)">Benjolan & Kelenjar (Tiroid, Lipoma, Kista Payudara)</option>
-            <option value="THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)">THT, Kulit & Alergi (Sinus, Tinnitus, Biduran)</option>
-            <option value="Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)">Gangguan Penglihatan & Mata (Mata Plus/Minus, Katarak)</option>
-            <option value="Gangguan Reproduksi & Kewanitaan (Haid, Promil)">Gangguan Reproduksi & Kewanitaan (Haid, Promil)</option>
-            <option value="Metabolik & Diet (Gula, Asam Urat, Obesitas)">Metabolik & Diet (Gula, Asam Urat, Obesitas)</option>
-            <option value="Gangguan Tidur & Emosi (Insomnia, Stres)">Gangguan Tidur & Emosi (Insomnia, Stres)</option>
-            <option value="Gangguan Neurologis (Sakit Kepala, Vertigo)">Gangguan Neurologis (Sakit Kepala, Vertigo)</option>
-            <option value="Sindrom Kelelahan & Penurunan Imun">Sindrom Kelelahan & Penurunan Imun</option>
-            <option value="Lainnya">Lainnya... (Ketik Manual)</option>
-        </select>
-        
-        <input type="text" id="keluhanManual" placeholder="Ketik keluhan utama pasien..." style="display:none; margin-bottom:15px;">
-
-        <label>Rincian Gejala Pasien:</label>
-        <textarea id="gejalaKlien" rows="2" placeholder="Ketik rincian gejala penyerta secara bebas di sini..." required style="margin-bottom:15px;"></textarea>
-
-        <label>Catatan Wawancara (Fokus Emosi / Shen):</label>
-        <textarea id="dataWawancara" rows="3" placeholder="Gali kondisi psikis: Apakah sedang stres? Ada emosi tertahan? Bagaimana kualitas tidurnya?" required></textarea>
-        
-        <label style="margin-top:15px;">Unggah Foto Lidah:</label>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <input type="file" id="fotoLidah" accept="image/*" required style="flex:1;">
-            <button type="button" id="btnOpenWebcam" style="width:auto; padding:12px 15px; background:#8e44ad;">📷 Kamera Laptop</button>
+        <div class="form-row">
+            <div class="form-col"><label>Umur (Thn):</label><input type="number" id="umurKlien" required></div>
+            <div class="form-col"><label>Gender:</label><select id="genderKlien" required><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+            <div class="form-col"><label>BB (Kg):</label><input type="number" id="beratKlien" required></div>
         </div>
-        <img id="previewGambar" class="image-preview">
+        <div class="form-row">
+            <div class="form-col"><label>No. WhatsApp:</label><input type="number" id="noWaKlien"></div>
+        </div>
 
-        <button type="submit" id="btnSubmit" style="margin-top:20px;">Analisis AI & Simpan</button>
+        <div class="section-title">🩺 Observasi Kunjungan Harian</div>
+        <div class="form-row">
+            <div class="form-col"><label>Tensi & Nadi:</label><input type="text" id="tensiKlien" placeholder="Contoh: 130/80/80"></div>
+            <div class="form-col">
+                <label>Keluhan Utama:</label>
+                <select id="keluhanUtama" required>
+                    <option value="" disabled selected>-- Pilih --</option>
+                    <option value="Pencernaan (Maag, Diare)">Pencernaan (Maag, Diare)</option>
+                    <option value="Nyeri Sendi/Saraf (Pinggang, Lutut)">Nyeri Sendi/Saraf (Pinggang, Lutut)</option>
+                    <option value="Emosi/Tidur (Stres, Insomnia)">Emosi/Tidur (Stres, Insomnia)</option>
+                    <option value="Lainnya">Lainnya...</option>
+                </select>
+            </div>
+        </div>
+        <label>Gejala Penyerta:</label>
+        <textarea id="gejalaKlien" rows="2" placeholder="Contoh: Asam urat paha lutut..." required style="margin-bottom:15px;"></textarea>
+
+        <label>Wawancara (Kondisi Emosi/Shen):</label>
+        <textarea id="dataWawancara" rows="2" placeholder="Apakah stres? Tidur lelap?" required></textarea>
+
+        <div class="section-title">📸 Modul Mata AI (Computer Vision)</div>
+        <div class="form-row">
+            <div class="form-col">
+                <label>1. Foto Lidah (Wajib):</label>
+                <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
+                <img id="previewLidah" class="image-preview">
+            </div>
+            <div class="form-col" id="boxIris">
+                <label>2. Foto Iris Mata (Opsional):</label>
+                <input type="file" id="fotoIris" accept="image/*" capture="environment">
+                <img id="previewIris" class="image-preview">
+                <p style="font-size:11px; color:#7f8c8d; margin-top:5px;">Foto jarak dekat. Biarkan kosong jika pasien lama.</p>
+                <input type="hidden" id="riwayatIrisTxt">
+            </div>
+        </div>
+
+        <button type="submit" id="btnSubmit" style="margin-top:20px;">Analisis AI & Simpan ke 3 Sheet</button>
     </form>
 
     <div id="hasilContainer" style="display:none; margin-top:30px; border-top:2px dashed #ccc; padding-top:20px;">
-        <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil Disimpan!</h3>
-        
-        <div id="qrOutput">
-            <h4 style="margin-top:0; color:#34495e;">ID Kartu Pasien Digital</h4>
-            <div id="qrcodeBox" style="display:flex; justify-content:center; margin-bottom:10px;"></div>
-            <b id="nrmText" style="font-size:20px; color:#e74c3c;"></b>
-            <p style="font-size:12px; color:#7f8c8d; margin-bottom:0;">Minta pasien memfoto Barcode ini untuk pendaftaran kunjungan berikutnya.</p>
+        <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil!</h3>
+        <div style="background:#f9f9f9; padding:15px; border-radius:8px; border-left:4px solid #8e44ad; margin-bottom:15px;">
+            <b style="color:#8e44ad;">👁️ Analisis Iridologi AI:</b>
+            <p id="resIris" style="font-size:14px; margin-top:5px;"></p>
         </div>
-
-        <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
-        
-        <button type="button" id="btnWA" class="btn-wa">Kirim Edukasi via WA</button>
-        <button type="button" id="btnReset" class="btn-reset">🔄 Pendaftaran Pasien Baru</button>
+        <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
+        <button type="button" id="btnReset" style="background:#95a5a6; margin-top: 15px;">🔄 Pasien Baru</button>
     </div>
 </div>
 
 <script>
-    // ⚠️ PASTIKAN URL INI SESUAI DENGAN WEB APP TERBARU AKANG SETELAH DEPLOY CODE.GS
+    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT TERBARU DI SINI
     const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
     
-    let profilKlinik = {};
-    let imageBase64Data = "";
-    let dataPasienTerakhir = {};
-    let videoStream = null;
-
-    // FUNGSI WEBCAM LAPTOP / HP
-    document.getElementById('btnOpenWebcam').addEventListener('click', async function() {
-        document.getElementById('webcamModal').style.display = 'flex';
-        try {
-            // Mencoba membuka kamera (prioritas kamera belakang jika ada)
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            document.getElementById('webcamVideo').srcObject = videoStream;
-        } catch (err) {
-            alert("Gagal mengakses kamera: Pastikan peramban Anda memiliki izin akses kamera.");
-            document.getElementById('webcamModal').style.display = 'none';
-        }
-    });
-
-    document.getElementById('btnCloseWebcam').addEventListener('click', function() {
-        if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); }
-        document.getElementById('webcamModal').style.display = 'none';
-    });
-
-    document.getElementById('btnCapture').addEventListener('click', function() {
-        const video = document.getElementById('webcamVideo');
-        const canvas = document.getElementById('webcamCanvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        imageBase64Data = canvas.toDataURL('image/jpeg');
-        document.getElementById('previewGambar').src = imageBase64Data;
-        document.getElementById('previewGambar').style.display = 'block';
-        
-        // Nonaktifkan kewajiban (required) pada input file karena foto sudah diambil via Webcam
-        document.getElementById('fotoLidah').required = false;
-
-        if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); }
-        document.getElementById('webcamModal').style.display = 'none';
-    });
-
-    // FUNGSI LAINNYA TETAP SAMA
-    document.getElementById('keluhanUtama').addEventListener('change', function() {
-        const keluhan = this.value;
-        const inputManual = document.getElementById('keluhanManual');
-
-        if(keluhan === "Lainnya") {
-            inputManual.style.display = "block";
-            inputManual.required = true;
-        } else {
-            inputManual.style.display = "none";
-            inputManual.required = false;
-            inputManual.value = "";
-        }
-    });
+    let base64Lidah = ""; let base64Iris = "";
 
     window.onload = async function() {
-        try {
-            const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "getConfig" }) });
-            const result = await res.json();
-            if (result.status === "kosong") {
-                document.getElementById('modalConfig').style.display = "flex";
-            } else {
-                profilKlinik = result.data;
-                document.getElementById('judulKlinik').innerText = profilKlinik.nama;
-                document.getElementById('mainApp').style.display = "block";
-            }
-        } catch (e) { alert("Gagal memuat pengaturan. Cek koneksi."); }
+        const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "getConfig" }) });
+        const result = await res.json();
+        if (result.status === "kosong") document.getElementById('modalConfig').style.display = "flex";
+        else { document.getElementById('judulKlinik').innerText = result.data.nama; document.getElementById('mainApp').style.display = "block"; }
     };
 
     document.getElementById('btnSaveConfig').addEventListener('click', async function() {
         const payload = { action: "setConfig", nama: document.getElementById('confNama').value, singkatan: document.getElementById('confSingkatan').value, alamat: document.getElementById('confAlamat').value, kontak: document.getElementById('confKontak').value };
-        if(!payload.nama || !payload.singkatan) return alert("Nama & Singkatan Wajib Diisi!");
-        this.innerText = "Menyimpan...";
         await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
-        alert("Pengaturan Berhasil Disimpan! Halaman akan dimuat ulang.");
         location.reload();
     });
 
-    let html5QrcodeScanner = null;
-    document.getElementById('btnScanQR').addEventListener('click', function() {
-        const readerDiv = document.getElementById('reader');
-        if (readerDiv.style.display === "block") {
-            readerDiv.style.display = "none";
-            if(html5QrcodeScanner) html5QrcodeScanner.clear();
-            this.innerText = "📷 Scan QR";
-            return;
-        }
-        readerDiv.style.display = "block";
-        this.innerText = "Tutup Kamera";
-        
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
-        html5QrcodeScanner.render(function(decodedText) {
-            document.getElementById('inputSearch').value = decodedText;
-            html5QrcodeScanner.clear();
-            document.getElementById('reader').style.display = "none";
-            document.getElementById('btnScanQR').innerText = "📷 Scan QR";
-            document.getElementById('btnSearch').click();
-        }, function(error) { });
-    });
-
+    // PENCARIAN & AUTO-FILL
     document.getElementById('btnSearch').addEventListener('click', async function() {
         const keyword = document.getElementById('inputSearch').value;
         if(!keyword) return;
         const resDiv = document.getElementById('searchResults');
-        resDiv.innerHTML = "<i>Mencari data...</i>";
-        try {
-            const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "search", searchKey: keyword }) });
-            const result = await res.json();
-            if (result.status === "sukses" && result.data.length > 0) {
-                let html = '';
-                result.data.forEach(r => {
-                    let tgl = new Date(r.waktu).toLocaleDateString('id-ID');
-                    let fotoHtml = r.foto ? `<br><a href="${r.foto}" target="_blank" style="color:#e67e22; text-decoration:none;">📸 Lihat Foto Lidah Sebelumnya</a>` : '';
-                    
-                    let nrmAman = r.nrm.replace(/'/g, "\\'");
-                    let namaAman = r.nama.replace(/'/g, "\\'");
-                    let waAman = r.wa ? r.wa.toString().replace(/'/g, "") : ''; 
-
-                    let formatMakananRiwayat = r.makanan;
-                    if (formatMakananRiwayat && formatMakananRiwayat.includes("1. Anjuran")) {
-                        formatMakananRiwayat = formatMakananRiwayat
-                            .replace(/1\.\s*Anjuran\s*:/gi, '<b>1. Anjuran:</b>')
-                            .replace(/2\.\s*Pantangan\s*:/gi, '<br><b>2. Pantangan:</b>')
-                            .replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '<br><b>3. Keseimbangan Termal:</b>');
-                    }
-
-                    html += `<div class="history-card">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                    <b style="font-size:14px; color:#2c3e50;">[${r.nrm}] ${r.nama}</b>
-                                    <button type="button" onclick="pilihPasien('${nrmAman}', '${namaAman}', '${waAman}')" style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; border-radius:6px; margin:0;">Pilih Pasien</button>
-                                </div>
-                                <span style="font-size:11px; color:#7f8c8d;">Kunjungan: ${tgl}</span><br>
-                                <span style="color:#555">Emosi (Shen): ${r.wawancara}</span><br>
-                                <b style="color:#e74c3c">Diagnosis: ${r.diagnosis}</b>
-                                
-                                <details style="margin-top:10px; background:#f9f9f9; padding:8px 12px; border-radius:6px; border:1px solid #eee;">
-                                    <summary style="font-size:12px; font-weight:bold; color:#2980b9; cursor:pointer; outline:none;">Lihat Rincian Terapi Sebelumnya</summary>
-                                    <div style="font-size:12px; margin-top:10px; line-height:1.6; color:#444;">
-                                        <b>🎯 Tung:</b> ${r.tung}<br>
-                                        <b>⚖️ Tan:</b> ${r.tan}<br>
-                                        <b>🧠 YNSA:</b> ${r.yamamoto}<br>
-                                        <b>🤲 Tuina:</b> ${r.tuina}<br>
-                                        <b>🔴 Bekam:</b> ${r.bekam}<br>
-                                        <b>🌿 Jamu:</b> ${r.jamu}<hr style="border: 0.5px solid #ddd; margin:10px 0;">
-                                        <b>🏃 Gerak:</b> ${r.gerak}<br><br>
-                                        <b>🥗 Makanan:</b> ${formatMakananRiwayat}
-                                    </div>
-                                </details>
-
-                                ${fotoHtml}
-                             </div>`;
-                });
-                resDiv.innerHTML = html;
-            } else { resDiv.innerHTML = '<b style="color:red">Pasien tidak ditemukan.</b>'; }
-        } catch(e) { resDiv.innerHTML = "Error jaringan."; }
+        resDiv.innerHTML = "<i>Mencari...</i>";
+        const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "search", searchKey: keyword }) });
+        const result = await res.json();
+        
+        if (result.status === "sukses" && result.data.length > 0) {
+            let html = '';
+            result.data.forEach(r => {
+                html += `<div class="history-card">
+                            <b>[${r.nrm}] ${r.nama}</b><br>
+                            <span style="font-size:12px; color:#555;">Umur: ${r.umur} | BB: ${r.berat} Kg</span><br>
+                            <button type="button" onclick='pilihPasien(${JSON.stringify(r).replace(/'/g, "\\'")})' style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; margin-top:5px; color:#fff; border:none; border-radius:4px; cursor:pointer;">Pilih Pasien</button>
+                         </div>`;
+            });
+            resDiv.innerHTML = html;
+        } else { resDiv.innerHTML = '<b style="color:red">Tidak ditemukan.</b>'; }
     });
 
-    window.pilihPasien = function(nrm, nama, wa) {
-        document.getElementById('nrmKlien').value = nrm;
-        document.getElementById('namaKlien').value = nama;
-        document.getElementById('noWaKlien').value = wa; 
-        document.getElementById('dataWawancara').value = "1. Beban Pikiran/Stres : \n2. Emosi Tertahan : \n3. Kualitas Tidur : ";
+    window.pilihPasien = function(data) {
+        document.getElementById('nrmKlien').value = data.nrm;
+        document.getElementById('namaKlien').value = data.nama;
+        document.getElementById('noWaKlien').value = data.wa;
+        document.getElementById('umurKlien').value = data.umur;
+        document.getElementById('genderKlien').value = data.gender;
+        document.getElementById('beratKlien').value = data.berat;
+        document.getElementById('riwayatIrisTxt').value = data.analisisIris;
+        
+        if(data.analisisIris && data.analisisIris !== "") {
+            document.getElementById('boxIris').style.opacity = "0.5";
+            document.getElementById('boxIris').title = "Foto iris genetik sudah tersimpan di database.";
+        }
         document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
     };
 
+    // HANDLE IMAGES
     document.getElementById('fotoLidah').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
+        if(e.target.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(event) {
-                document.getElementById('previewGambar').src = event.target.result;
-                document.getElementById('previewGambar').style.display = 'block';
-                imageBase64Data = event.target.result;
-                // Pastikan required file input dikembalikan jika mereka menggunakan tombol Choose File
-                document.getElementById('fotoLidah').required = true;
-            }
-            reader.readAsDataURL(file);
+            reader.onload = function(evt) { document.getElementById('previewLidah').src = evt.target.result; document.getElementById('previewLidah').style.display = 'block'; base64Lidah = evt.target.result; }
+            reader.readAsDataURL(e.target.files[0]);
         }
     });
 
+    document.getElementById('fotoIris').addEventListener('change', function(e) {
+        if(e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(evt) { document.getElementById('previewIris').src = evt.target.result; document.getElementById('previewIris').style.display = 'block'; base64Iris = evt.target.result; }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    // SUBMIT DATA
     document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
-
-        if(document.getElementById('nrmKlien').value === "") {
-            const konfirmasi = confirm("⚠️ NRM KOSONG!\n\nSistem akan mendaftarkan ini sebagai PASIEN BARU dan membuat NRM baru.\n\nApakah Anda yakin ini pasien baru?\n(Jika ini Pasien Lama, klik BATAL lalu gunakan kotak Pencarian di atas).");
-            if(!konfirmasi) {
-                return; 
-            }
-        }
+        btn.disabled = true; btn.innerText = "🧠 AI Sedang Membedah 2 Gambar...";
         
-        btn.disabled = true; btn.innerText = "Menganalisis Lidah & Meracik Resep...";
-        
-        const valKeluhan = document.getElementById('keluhanUtama').value;
-        const finalKeluhan = valKeluhan === "Lainnya" ? document.getElementById('keluhanManual').value : valKeluhan;
-
         const payload = {
             action: "insert", 
             nrm: document.getElementById('nrmKlien').value, 
             namaKlien: document.getElementById('namaKlien').value,
             noWa: document.getElementById('noWaKlien').value,
+            umur: document.getElementById('umurKlien').value,
+            gender: document.getElementById('genderKlien').value,
+            berat: document.getElementById('beratKlien').value,
             tensi: document.getElementById('tensiKlien').value,
-            keluhan: finalKeluhan,
+            keluhan: document.getElementById('keluhanUtama').value,
             gejala: document.getElementById('gejalaKlien').value, 
             wawancara: document.getElementById('dataWawancara').value,
-            imageBase64: imageBase64Data
+            riwayatIris: document.getElementById('riwayatIrisTxt').value,
+            imgLidah: base64Lidah,
+            imgIris: base64Iris
         };
 
         try {
@@ -360,16 +216,8 @@
             
             if (result.status === "sukses") {
                 const rd = result.data;
-                dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
-                let formatMakananWeb = rd.makanan;
-                if (formatMakananWeb.includes("1. Anjuran")) {
-                    formatMakananWeb = formatMakananWeb
-                        .replace(/1\.\s*Anjuran\s*:/gi, '<b>1. Anjuran:</b>')
-                        .replace(/2\.\s*Pantangan\s*:/gi, '<br><br><b>2. Pantangan:</b>')
-                        .replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '<br><br><b>3. Keseimbangan Termal:</b>');
-                }
-
+                document.getElementById('resIris').innerText = rd.analisis_iris || "Menggunakan rekam data mata sebelumnya.";
                 document.getElementById('resLengkap').innerHTML = `
                     <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
                     <i style="color:#555;">${rd.penjelasan}</i><hr style="border: 0.5px solid #eee; margin:15px 0;">
@@ -380,72 +228,15 @@
                     <b>🔴 Bekam:</b> ${rd.bekam}<br><br>
                     <b>🌿 Jamu:</b> ${rd.jamu}<hr style="border: 0.5px solid #eee; margin:15px 0;">
                     <b>🏃 Gerak:</b> ${rd.gerak}<br><br>
-                    <b>🥗 Makanan:</b> ${formatMakananWeb}
+                    <b>🥗 Makanan:</b> ${rd.makanan}
                 `;
-                
-                document.getElementById('nrmText').innerText = rd.nrm;
-                document.getElementById('qrcodeBox').innerHTML = ""; 
-                new QRCode(document.getElementById("qrcodeBox"), { text: rd.nrm, width: 150, height: 150 });
-                
-                document.getElementById('qrOutput').style.display = "block";
                 document.getElementById('hasilContainer').style.display = "block"; 
             } else { alert("Gagal: " + result.pesan); }
-        } catch (e) { alert("Server Sibuk."); } 
-        finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan"; }
+        } catch (e) { alert("Server Sibuk. Ulangi."); } 
+        finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan ke 3 Sheet"; }
     });
 
-    document.getElementById('btnWA').addEventListener('click', function() {
-        if (!dataPasienTerakhir || !dataPasienTerakhir.nama) { alert("Belum ada data diagnosis pasien yang bisa dikirim."); return; }
-
-        let noWa = document.getElementById('noWaKlien').value;
-        if (noWa) {
-            noWa = noWa.replace(/\D/g, ''); 
-            if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1); 
-        }
-
-        const namaKlinik = profilKlinik.nama || "Klinik TCM";
-        const alamatKlinik = profilKlinik.alamat || "";
-
-        let formatMakananWA = dataPasienTerakhir.makanan;
-        if (formatMakananWA.includes("1. Anjuran")) {
-            formatMakananWA = formatMakananWA
-                .replace(/1\.\s*Anjuran\s*:/gi, '*1. Anjuran:*')
-                .replace(/2\.\s*Pantangan\s*:/gi, '\n\n*2. Pantangan:*')
-                .replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '\n\n*3. Keseimbangan Termal:*');
-        }
-
-        const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${formatMakananWA}\n\n_Semoga lekas sembuh!_`;
-        
-        let waUrl = noWa && noWa.length >= 9 
-            ? `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}` 
-            : `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
-
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(teksWA).catch(e => console.log("Gagal menyalin: ", e));
-        }
-
-        window.open(waUrl, '_blank');
-    });
-
-    document.getElementById('btnReset').addEventListener('click', function() {
-        if(confirm("Apakah Anda yakin ingin membersihkan form untuk mendaftar pasien baru?")) {
-            document.getElementById('formKlinis').reset();
-            
-            // Mengembalikan status required file input jika sebelumnya memakai webcam
-            document.getElementById('fotoLidah').required = true;
-            imageBase64Data = "";
-            dataPasienTerakhir = {};
-            
-            document.getElementById('previewGambar').style.display = 'none';
-            document.getElementById('previewGambar').src = '';
-            document.getElementById('keluhanManual').style.display = 'none';
-            document.getElementById('hasilContainer').style.display = 'none';
-            document.getElementById('inputSearch').value = '';
-            document.getElementById('searchResults').innerHTML = '';
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    });
+    document.getElementById('btnReset').addEventListener('click', () => location.reload());
 </script>
 </body>
 </html>
