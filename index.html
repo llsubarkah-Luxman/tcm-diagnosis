@@ -22,7 +22,6 @@
         .btn-scan { background: #e67e22; width: auto; padding: 12px 15px; }
         .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
         
-        /* SCROLLBAR UNTUK PENCARIAN */
         #searchResults { max-height: 320px; overflow-y: auto; padding-right: 8px; }
         #searchResults::-webkit-scrollbar { width: 6px; }
         #searchResults::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 10px; }
@@ -37,7 +36,6 @@
 </head>
 <body>
 
-<!-- MODAL PENGATURAN KLINIK -->
 <div id="modalConfig">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#2c3e50;">⚙️ Setup Profil Klinik</h3>
@@ -53,7 +51,6 @@
 <div class="container" id="mainApp" style="display:none;">
     <h2 id="judulKlinik">Klinik TCM</h2>
 
-    <!-- PANEL PENCARIAN & SCANNER -->
     <div class="search-box">
         <h4 style="margin-top:0; color:#2980b9;">🔍 Pencarian & Scan QR Pasien</h4>
         <div style="display: flex; gap: 10px;">
@@ -65,7 +62,6 @@
         <div id="searchResults"></div>
     </div>
 
-    <!-- FORM MEDIS -->
     <form id="formKlinis">
         <div class="form-row">
             <div class="form-col"><label>NRM (Pasien Baru Otomatis):</label><input type="text" id="nrmKlien" placeholder="Otomatis diisi sistem" readonly style="background-color: #f1f3f5; cursor: not-allowed;"></div>
@@ -102,14 +98,12 @@
         <textarea id="dataWawancara" rows="3" placeholder="Gali kondisi psikis: Apakah sedang stres? Ada emosi tertahan? Bagaimana kualitas tidurnya?" required></textarea>
         
         <label style="margin-top:15px;">Unggah Foto Lidah:</label>
-        <!-- PENGHAPUSAN CAPTURE=ENVIRONMENT AGAR BISA BUKA GALERI DI ANDROID -->
         <input type="file" id="fotoLidah" accept="image/*" required>
         <img id="previewGambar" class="image-preview">
 
         <button type="submit" id="btnSubmit" style="margin-top:20px;">Analisis AI & Simpan</button>
     </form>
 
-    <!-- HASIL DIAGNOSIS & QR -->
     <div id="hasilContainer" style="display:none; margin-top:30px; border-top:2px dashed #ccc; padding-top:20px;">
         <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil Disimpan!</h3>
         
@@ -123,13 +117,12 @@
         <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
         
         <button type="button" id="btnWA" class="btn-wa">Kirim Edukasi via WA</button>
-        <!-- TOMBOL RESET KEMBALI DIMUNCULKAN -->
         <button type="button" id="btnReset" class="btn-reset">🔄 Pendaftaran Pasien Baru</button>
     </div>
 </div>
 
 <script>
-    // ⚠️ PASTIKAN URL INI SESUAI DENGAN WEB APP TERBARU AKANG SETELAH DEPLOY
+    // ⚠️ PASTIKAN URL INI SESUAI DENGAN WEB APP TERBARU AKANG SETELAH DEPLOY CODE.GS
     const scriptURL = "https://script.google.com/macros/s/AKfycbw0egBKH6XRWd-O8CuqU3ztMSDBLgfcAN__CxH-rVFVx34CZLcfSQGRYB-4saDZyw/exec"; 
     
     let profilKlinik = {};
@@ -213,7 +206,6 @@
                     let namaAman = r.nama.replace(/'/g, "\\'");
                     let waAman = r.wa ? r.wa.toString().replace(/'/g, "") : ''; 
 
-                    // MENU LIPAT RINCIAN TERAPI DITAMBAHKAN DI SINI
                     html += `<div class="history-card">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <b style="font-size:14px; color:#2c3e50;">[${r.nrm}] ${r.nama}</b>
@@ -267,6 +259,17 @@
     document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
+
+        // ==========================================
+        // ALARM ANTI-DUPLIKASI DITAMBAHKAN DI SINI
+        // ==========================================
+        if(document.getElementById('nrmKlien').value === "") {
+            const konfirmasi = confirm("⚠️ NRM KOSONG!\n\nSistem akan mendaftarkan ini sebagai PASIEN BARU dan membuat NRM baru.\n\nApakah Anda yakin ini pasien baru?\n(Jika ini Pasien Lama, klik BATAL lalu gunakan kotak Pencarian di atas).");
+            if(!konfirmasi) {
+                return; 
+            }
+        }
+        
         btn.disabled = true; btn.innerText = "Menganalisis Lidah & Meracik Resep...";
         
         const valKeluhan = document.getElementById('keluhanUtama').value;
@@ -292,7 +295,6 @@
                 const rd = result.data;
                 dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
-                // FORMAT MAKANAN UNTUK LAYAR WEB (ANGKA TEBAL)
                 let formatMakananWeb = rd.makanan;
                 if (formatMakananWeb.includes("1. Anjuran")) {
                     formatMakananWeb = formatMakananWeb
@@ -337,7 +339,6 @@
         const namaKlinik = profilKlinik.nama || "Klinik TCM";
         const alamatKlinik = profilKlinik.alamat || "";
 
-        // FORMAT MAKANAN UNTUK WA (ANGKA TEBAL DENGAN BINTANG)
         let formatMakananWA = dataPasienTerakhir.makanan;
         if (formatMakananWA.includes("1. Anjuran")) {
             formatMakananWA = formatMakananWA
@@ -359,7 +360,6 @@
         window.open(waUrl, '_blank');
     });
 
-    // FUNGSI RESET FORM UNTUK PASIEN BARU
     document.getElementById('btnReset').addEventListener('click', function() {
         if(confirm("Apakah Anda yakin ingin membersihkan form untuk mendaftar pasien baru?")) {
             document.getElementById('formKlinis').reset();
