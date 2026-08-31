@@ -32,6 +32,10 @@
         .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
         #qrOutput { margin-top: 15px; padding: 15px; background: #f9f9f9; text-align: center; border-radius: 8px; border: 2px dashed #ccc; display: none; }
         #reader { width: 100%; margin-top: 15px; display: none; }
+        
+        /* Modal Webcam */
+        #webcamModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; flex-direction:column; align-items:center; justify-content:center; }
+        #webcamVideo { width:90%; max-width:500px; border-radius:8px; border: 3px solid #fff; }
     </style>
 </head>
 <body>
@@ -46,6 +50,17 @@
         <div style="margin-bottom:15px;"><input type="text" id="confKontak" placeholder="No. WA Klinik"></div>
         <button id="btnSaveConfig">Simpan Konfigurasi</button>
     </div>
+</div>
+
+<!-- KOTAK WEBCAM LAPTOP -->
+<div id="webcamModal">
+    <h3 style="color:#fff; margin-bottom:15px;">Kamera Laptop / Perangkat</h3>
+    <video id="webcamVideo" autoplay playsinline></video>
+    <div style="display:flex; gap:15px; margin-top:20px;">
+        <button type="button" id="btnCapture" style="background:#27ae60; width:150px;">📸 Ambil Foto</button>
+        <button type="button" id="btnCloseWebcam" style="background:#e74c3c; width:150px;">❌ Batal</button>
+    </div>
+    <canvas id="webcamCanvas" style="display:none;"></canvas>
 </div>
 
 <div class="container" id="mainApp" style="display:none;">
@@ -98,7 +113,10 @@
         <textarea id="dataWawancara" rows="3" placeholder="Gali kondisi psikis: Apakah sedang stres? Ada emosi tertahan? Bagaimana kualitas tidurnya?" required></textarea>
         
         <label style="margin-top:15px;">Unggah Foto Lidah:</label>
-        <input type="file" id="fotoLidah" accept="image/*" required>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <input type="file" id="fotoLidah" accept="image/*" required style="flex:1;">
+            <button type="button" id="btnOpenWebcam" style="width:auto; padding:12px 15px; background:#8e44ad;">📷 Kamera Laptop</button>
+        </div>
         <img id="previewGambar" class="image-preview">
 
         <button type="submit" id="btnSubmit" style="margin-top:20px;">Analisis AI & Simpan</button>
@@ -128,7 +146,47 @@
     let profilKlinik = {};
     let imageBase64Data = "";
     let dataPasienTerakhir = {};
+    let videoStream = null;
 
+    // FUNGSI WEBCAM LAPTOP / HP
+    document.getElementById('btnOpenWebcam').addEventListener('click', async function() {
+        document.getElementById('webcamModal').style.display = 'flex';
+        try {
+            // Mencoba membuka kamera (prioritas kamera belakang jika ada)
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            document.getElementById('webcamVideo').srcObject = videoStream;
+        } catch (err) {
+            alert("Gagal mengakses kamera: Pastikan peramban Anda memiliki izin akses kamera.");
+            document.getElementById('webcamModal').style.display = 'none';
+        }
+    });
+
+    document.getElementById('btnCloseWebcam').addEventListener('click', function() {
+        if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); }
+        document.getElementById('webcamModal').style.display = 'none';
+    });
+
+    document.getElementById('btnCapture').addEventListener('click', function() {
+        const video = document.getElementById('webcamVideo');
+        const canvas = document.getElementById('webcamCanvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        imageBase64Data = canvas.toDataURL('image/jpeg');
+        document.getElementById('previewGambar').src = imageBase64Data;
+        document.getElementById('previewGambar').style.display = 'block';
+        
+        // Nonaktifkan kewajiban (required) pada input file karena foto sudah diambil via Webcam
+        document.getElementById('fotoLidah').required = false;
+
+        if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); }
+        document.getElementById('webcamModal').style.display = 'none';
+    });
+
+    // FUNGSI LAINNYA TETAP SAMA
     document.getElementById('keluhanUtama').addEventListener('change', function() {
         const keluhan = this.value;
         const inputManual = document.getElementById('keluhanManual');
@@ -206,7 +264,6 @@
                     let namaAman = r.nama.replace(/'/g, "\\'");
                     let waAman = r.wa ? r.wa.toString().replace(/'/g, "") : ''; 
 
-                    // Merapikan format makanan riwayat agar tebal
                     let formatMakananRiwayat = r.makanan;
                     if (formatMakananRiwayat && formatMakananRiwayat.includes("1. Anjuran")) {
                         formatMakananRiwayat = formatMakananRiwayat
@@ -262,6 +319,8 @@
                 document.getElementById('previewGambar').src = event.target.result;
                 document.getElementById('previewGambar').style.display = 'block';
                 imageBase64Data = event.target.result;
+                // Pastikan required file input dikembalikan jika mereka menggunakan tombol Choose File
+                document.getElementById('fotoLidah').required = true;
             }
             reader.readAsDataURL(file);
         }
@@ -271,7 +330,6 @@
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
 
-        // ALARM ANTI-DUPLIKASI
         if(document.getElementById('nrmKlien').value === "") {
             const konfirmasi = confirm("⚠️ NRM KOSONG!\n\nSistem akan mendaftarkan ini sebagai PASIEN BARU dan membuat NRM baru.\n\nApakah Anda yakin ini pasien baru?\n(Jika ini Pasien Lama, klik BATAL lalu gunakan kotak Pencarian di atas).");
             if(!konfirmasi) {
@@ -373,6 +431,8 @@
         if(confirm("Apakah Anda yakin ingin membersihkan form untuk mendaftar pasien baru?")) {
             document.getElementById('formKlinis').reset();
             
+            // Mengembalikan status required file input jika sebelumnya memakai webcam
+            document.getElementById('fotoLidah').required = true;
             imageBase64Data = "";
             dataPasienTerakhir = {};
             
