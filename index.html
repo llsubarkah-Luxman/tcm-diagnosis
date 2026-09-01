@@ -175,7 +175,7 @@
 
 <script>
     // ==========================================
-    // ⚠️ INI URL WEB APP TERBARU AKANG
+    // ⚠️ PASTIKAN URL WEB APP AKANG DIMASUKKAN DI SINI
     // ==========================================
     const scriptURL = "https://script.google.com/macros/s/AKfycbwLgS0RmdtM9TwGcrC2g-EvVS-kbk1qL3RC24O7pzUc44xHOnS48fqIy0I_mIwmNxszvQ/exec"; 
 
@@ -364,8 +364,13 @@
     document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
+        
+        // --- ALARM ANTI-DUPLIKASI ---
         if(document.getElementById('nrmKlien').value === "") {
-            if(!confirm("⚠️ NRM KOSONG!\n\nSistem akan mendaftarkan ini sebagai PASIEN BARU dan membuat NRM baru. Lanjutkan?")) return; 
+            const konfirmasi = confirm("⚠️ NRM KOSONG!\n\nSistem akan mendaftarkan ini sebagai PASIEN BARU dan membuat NRM baru.\n\nApakah Anda yakin ini pasien baru?\n(Jika ini Pasien Lama, klik BATAL lalu gunakan kotak Pencarian di atas).");
+            if(!konfirmasi) {
+                return;
+            }
         }
 
         btn.disabled = true; btn.innerText = "🧠 Memproses AI...";
@@ -396,12 +401,13 @@
                 const rd = result.data;
                 dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
+                // --- FORMATTING MAKANAN TERPISAH (BOLD) ---
                 let formatMakananWeb = rd.makanan;
                 if (formatMakananWeb && formatMakananWeb.includes("1. Anjuran")) {
                     formatMakananWeb = formatMakananWeb
-                        .replace(/1\.\s*Anjuran\s*:/gi, '<b>1. Anjuran:</b>')
-                        .replace(/2\.\s*Pantangan\s*:/gi, '<br><br><b>2. Pantangan:</b>')
-                        .replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '<br><br><b>3. Keseimbangan Termal:</b>');
+                        .replace(/1\.\s*Anjuran\s*Makanan\s*:/gi, '<br><br><b>1. Anjuran Makanan:</b>')
+                        .replace(/2\.\s*Pantangan\s*Makanan\s*:/gi, '<br><br><b>2. Pantangan Makanan:</b>')
+                        .replace(/3\.\s*Kombinasi\s*Makanan\s*Panas\s*dan\s*Dingin\s*:/gi, '<br><br><b>3. Kombinasi Makanan Panas dan Dingin:</b>');
                 }
 
                 document.getElementById('resLengkap').innerHTML = `
@@ -428,30 +434,48 @@
                 document.getElementById('qrOutput').style.display = "block";
                 document.getElementById('hasilContainer').style.display = "block"; 
             } else { alert("Gagal: " + result.pesan); }
-        } catch (e) { alert("Server Sibuk."); } 
+        } catch (e) { alert("Server Sibuk. Silakan coba lagi."); } 
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan Rekam Medis"; }
     });
 
-    // KIRIM WA
+    // --- PERBAIKAN TOMBOL WHATSAPP (OTOMATIS COPY & REDIRECT) ---
     document.getElementById('btnWA').addEventListener('click', function() {
-        if (!dataPasienTerakhir || !dataPasienTerakhir.nama) return alert("Belum ada data.");
-        let noWa = document.getElementById('noWaKlien').value;
-        if (noWa) { noWa = noWa.replace(/\D/g, ''); if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1); }
-
-        const namaKlinik = profilKlinik.nama || "Klinik TCM";
-        const alamatKlinik = profilKlinik.alamat || "";
-        
-        let mknWA = dataPasienTerakhir.makanan;
-        if (mknWA && mknWA.includes("1. Anjuran")) {
-            mknWA = mknWA.replace(/1\.\s*Anjuran\s*:/gi, '*1. Anjuran:*').replace(/2\.\s*Pantangan\s*:/gi, '\n\n*2. Pantangan:*').replace(/3\.\s*Keseimbangan Termal.*?(:|-)/gi, '\n\n*3. Keseimbangan Termal:*');
+        if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
+            alert("Belum ada data pasien untuk dikirim.");
+            return;
         }
 
-        const teksWA = `*${namaKlinik}*\n_${alamatKlinik}_\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Terapi Makanan:*\n${mknWA}\n\n_Semoga lekas sembuh!_`;
+        let noWa = document.getElementById('noWaKlien').value;
+        if (noWa && noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
+        noWa = noWa ? noWa.replace(/\D/g, '') : ''; 
+
+        // FORMAT PESAN WA (BOLD & RAPI)
+        let mknWA = dataPasienTerakhir.makanan;
+        if (mknWA && mknWA.includes("1. Anjuran")) {
+            mknWA = mknWA
+                .replace(/1\.\s*Anjuran\s*Makanan\s*:/gi, '*1. Anjuran Makanan:*')
+                .replace(/2\.\s*Pantangan\s*Makanan\s*:/gi, '\n\n*2. Pantangan Makanan:*')
+                .replace(/3\.\s*Kombinasi\s*Makanan\s*Panas\s*dan\s*Dingin\s*:/gi, '\n\n*3. Kombinasi Makanan Panas dan Dingin:*');
+        }
+
+        const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${mknWA}\n\n_Semoga lekas sembuh!_`;
         
-        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(teksWA).catch(e => console.log(e));
+        // 1. Salin Teks Otomatis ke Memori (Clipboard)
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(teksWA).then(() => {
+                console.log("Teks berhasil disalin ke memori.");
+            }).catch(e => {
+                console.log("Gagal menyalin otomatis: ", e);
+            });
+        }
         
-        let waUrl = noWa && noWa.length >= 9 ? `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
-        window.open(waUrl, '_blank');
+        // 2. Membuka Tautan WA Langsung
+        let tautanWA = `https://wa.me/?text=` + encodeURIComponent(teksWA);
+        if (noWa && noWa.length > 5) {
+            tautanWA = `https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA);
+        }
+        
+        window.open(tautanWA, '_blank');
     });
 
     // RESET FORM PASIEN BARU
