@@ -176,7 +176,7 @@
 </div>
 
 <script>
-    // ⚠️ GANTI DENGAN URL WEB APP BARU SETELAH DEPLOY CODE.GS!
+    // ⚠️ GANTI DENGAN URL WEB APP TERBARU AKANG SETELAH DEPLOY CODE.GS!
     const scriptURL = "https://script.google.com/macros/s/AKfycbwLgS0RmdtM9TwGcrC2g-EvVS-kbk1qL3RC24O7pzUc44xHOnS48fqIy0I_mIwmNxszvQ/exec"; 
 
     const saranGejala = {
@@ -278,9 +278,11 @@
                                     <div style="font-size:12px; margin-top:10px; line-height:1.6; color:#444;">
                                         <b>🎯 Tung:</b> ${r.tung || "-"}<br>
                                         <b>⚖️ Tan:</b> ${r.tan || "-"}<br>
+                                        <b>🧠 YNSA:</b> ${r.yamamoto || "-"}<br>
                                         <b>🤲 Tuina:</b> ${r.tuina || "-"}<br>
                                         <b>🔴 Bekam:</b> ${r.bekam || "-"}<br>
                                         <b>🌿 Jamu:</b> ${r.jamu || "-"}<hr style="border: 0.5px solid #ddd; margin:10px 0;">
+                                        <b>🏃 Gerak:</b> ${r.gerak || "-"}<br><br>
                                         <b>🥗 Makanan:</b> ${formatMakananRiwayat}
                                     </div>
                                 </details>
@@ -440,6 +442,7 @@
                     <b>🥗 Makanan:</b> ${formatMakananWeb}
                 `;
                 
+                // GENERATE QR
                 document.getElementById('nrmText').innerText = rd.nrm;
                 document.getElementById('qrcodeBox').innerHTML = ""; 
                 new QRCode(document.getElementById("qrcodeBox"), { text: rd.nrm, width: 150, height: 150 });
@@ -470,8 +473,9 @@
                 .replace(/3\.\s*Kombinasi\s*Makanan\s*Panas\s*dan\s*Dingin\s*:/gi, '\n\n*3. Kombinasi Makanan Panas dan Dingin:*');
         }
 
-        const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${mknWA}\n\n_Semoga lekas sembuh!_`;
+        const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${mknWA}\n\n_Semoga lekas sembuh!_`;
         
+        // Memaksa proses penyalinan ke clipboard (di latar belakang)
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(teksWA).catch(e => console.log(e));
         }
@@ -481,10 +485,12 @@
             tautanWA = `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
         }
         
-        // Coba Buka Jendela Baru, Jika Terblokir, Pindah Halaman Otomatis
+        // Coba Buka Jendela Baru, Jika Terblokir oleh Browser HP, Pindah Halaman Otomatis
         try {
             let win = window.open(tautanWA, '_blank');
-            if(!win) { window.location.href = tautanWA; }
+            if(!win) { 
+                window.location.href = tautanWA; 
+            }
         } catch(e) {
             window.location.href = tautanWA;
         }
