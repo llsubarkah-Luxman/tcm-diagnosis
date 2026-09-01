@@ -454,42 +454,50 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan Rekam Medis"; }
     });
 
- // KIRIM WA ANTI-GAGAL (JALUR API RESMI)
+// KIRIM WA ANTI-GAGAL (DIRECT WEB.WHATSAPP & WA.ME)
     document.getElementById('btnWA').addEventListener('click', function() {
         if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
             alert("Belum ada data pasien untuk dikirim.");
             return;
         }
 
-        // Ambil dan rapikan format nomor WA
-        let noWa = document.getElementById('noWaKlien').value;
-        if (noWa && noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
-        noWa = noWa ? noWa.replace(/\D/g, '') : ''; 
+        // 1. Pembersihan Nomor WA Super Ketat
+        let noWaRaw = document.getElementById('noWaKlien').value || "";
+        let noWa = noWaRaw.replace(/\D/g, ''); // Paksa buang semua karakter selain angka (spasi, +, -)
+        if (noWa.startsWith('0')) { 
+            noWa = '62' + noWa.substring(1); 
+        }
 
-        // Format ulang teks makanan agar tebal
-        let mknWA = dataPasienTerakhir.makanan;
-        if (mknWA && mknWA.includes("1. Anjuran")) {
+        // 2. Format ulang teks makanan agar tebal
+        let mknWA = dataPasienTerakhir.makanan || "-";
+        if (mknWA.includes("1. Anjuran")) {
             mknWA = mknWA
                 .replace(/1\.\s*Anjuran\s*Makanan\s*:/gi, '*1. Anjuran Makanan:*')
                 .replace(/2\.\s*Pantangan\s*Makanan\s*:/gi, '\n\n*2. Pantangan Makanan:*')
                 .replace(/3\.\s*Kombinasi\s*Makanan\s*Panas\s*dan\s*Dingin\s*:/gi, '\n\n*3. Kombinasi Makanan Panas dan Dingin:*');
         }
 
-        // Susun teks akhir
+        // 3. Susun Teks Akhir
         const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${mknWA}\n\n_Semoga lekas sembuh!_`;
         
-        // Memaksa proses penyalinan ke clipboard di latar belakang
+        // 4. Salin paksa ke clipboard (cadangan)
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(teksWA).catch(e => console.log(e));
+            navigator.clipboard.writeText(teksWA).catch(e => console.log("Clipboard tertahan"));
         }
 
-        // JALUR API WHATSAPP: Mengunci parameter "phone=" agar tidak hilang di WA Web
-        let tautanWA = `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
-        if (noWa && noWa.length > 5) {
-            tautanWA = `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
+        // 5. DETEKSI PERANGKAT LALU PISAHKAN JALURNYA
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        let tautanWA = "";
+
+        if (isMobile) {
+            // Jalur HP: Menggunakan wa.me agar langsung membuka aplikasi WhatsApp
+            tautanWA = noWa ? `https://wa.me/${noWa}?text=${encodeURIComponent(teksWA)}` : `https://wa.me/?text=${encodeURIComponent(teksWA)}`;
+        } else {
+            // Jalur Laptop: Langsung menembus WhatsApp Web (Bypass halaman konfirmasi yang bermasalah)
+            tautanWA = noWa ? `https://web.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}` : `https://web.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
         }
         
-        // Buka Jendela
+        // 6. Eksekusi Buka Jendela
         try {
             let win = window.open(tautanWA, '_blank');
             if(!win) { window.location.href = tautanWA; }
@@ -497,6 +505,7 @@
             window.location.href = tautanWA;
         }
     });
+    
     document.getElementById('btnReset').addEventListener('click', function() {
         if(confirm("Bersihkan form untuk mendaftar pasien baru?")) {
             document.getElementById('formKlinis').reset();
