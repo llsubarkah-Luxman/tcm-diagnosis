@@ -454,16 +454,16 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan Rekam Medis"; }
     });
 
-// KIRIM WA ANTI-GAGAL (DIRECT WEB.WHATSAPP & WA.ME)
+// KIRIM WA ANTI-GAGAL (DETEKSI HP & LAPTOP OTOMATIS)
     document.getElementById('btnWA').addEventListener('click', function() {
         if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
             alert("Belum ada data pasien untuk dikirim.");
             return;
         }
 
-        // 1. Pembersihan Nomor WA Super Ketat
+        // 1. Ambil dan bersihkan nomor WA
         let noWaRaw = document.getElementById('noWaKlien').value || "";
-        let noWa = noWaRaw.replace(/\D/g, ''); // Paksa buang semua karakter selain angka (spasi, +, -)
+        let noWa = noWaRaw.replace(/\D/g, ''); // Paksa buang semua karakter selain angka
         if (noWa.startsWith('0')) { 
             noWa = '62' + noWa.substring(1); 
         }
@@ -485,15 +485,15 @@
             navigator.clipboard.writeText(teksWA).catch(e => console.log("Clipboard tertahan"));
         }
 
-        // 5. DETEKSI PERANGKAT LALU PISAHKAN JALURNYA
+        // 5. DETEKSI PERANGKAT (KUNCI UTAMA AGAR NOMOR TIDAK HILANG DI LAPTOP)
         let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         let tautanWA = "";
 
         if (isMobile) {
-            // Jalur HP: Menggunakan wa.me agar langsung membuka aplikasi WhatsApp
+            // Jalur HP: Menggunakan wa.me agar langsung membuka aplikasi WhatsApp di HP
             tautanWA = noWa ? `https://wa.me/${noWa}?text=${encodeURIComponent(teksWA)}` : `https://wa.me/?text=${encodeURIComponent(teksWA)}`;
         } else {
-            // Jalur Laptop: Langsung menembus WhatsApp Web (Bypass halaman konfirmasi yang bermasalah)
+            // Jalur Laptop: Langsung menembus WhatsApp Web (Mengunci nomor agar tidak tercecer)
             tautanWA = noWa ? `https://web.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}` : `https://web.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
         }
         
