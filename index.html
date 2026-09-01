@@ -454,17 +454,19 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan Rekam Medis"; }
     });
 
-   // KIRIM WA ANTI-GAGAL (DETEKSI HP VS LAPTOP)
+  // KIRIM WA ANTI-GAGAL (MENGGUNAKAN JALUR RESMI WA.ME)
     document.getElementById('btnWA').addEventListener('click', function() {
         if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
             alert("Belum ada data pasien untuk dikirim.");
             return;
         }
 
+        // Ambil dan rapikan format nomor WA
         let noWa = document.getElementById('noWaKlien').value;
         if (noWa && noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
         noWa = noWa ? noWa.replace(/\D/g, '') : ''; 
 
+        // Format ulang teks makanan agar tebal
         let mknWA = dataPasienTerakhir.makanan;
         if (mknWA && mknWA.includes("1. Anjuran")) {
             mknWA = mknWA
@@ -473,22 +475,21 @@
                 .replace(/3\.\s*Kombinasi\s*Makanan\s*Panas\s*dan\s*Dingin\s*:/gi, '\n\n*3. Kombinasi Makanan Panas dan Dingin:*');
         }
 
+        // Susun teks akhir
         const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${mknWA}\n\n_Semoga lekas sembuh!_`;
         
-        // Memaksa proses penyalinan ke clipboard
+        // Memaksa proses penyalinan ke clipboard di latar belakang
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(teksWA).catch(e => console.log(e));
         }
 
-        // DETEKSI PERANGKAT (HP atau Laptop)
-        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        let baseUrl = isMobile ? 'https://api.whatsapp.com/send' : 'https://web.whatsapp.com/send';
-
-        let tautanWA = `${baseUrl}?text=${encodeURIComponent(teksWA)}`;
+        // JALUR WA.ME: Paling stabil untuk membawa nomor ke WA Web tanpa hilang
+        let tautanWA = `https://wa.me/?text=${encodeURIComponent(teksWA)}`;
         if (noWa && noWa.length > 5) {
-            tautanWA = `${baseUrl}?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
+            tautanWA = `https://wa.me/${noWa}?text=${encodeURIComponent(teksWA)}`;
         }
         
+        // Buka Jendela
         try {
             let win = window.open(tautanWA, '_blank');
             if(!win) { window.location.href = tautanWA; }
@@ -496,7 +497,6 @@
             window.location.href = tautanWA;
         }
     });
-
     document.getElementById('btnReset').addEventListener('click', function() {
         if(confirm("Bersihkan form untuk mendaftar pasien baru?")) {
             document.getElementById('formKlinis').reset();
