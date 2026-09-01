@@ -454,7 +454,7 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan Rekam Medis"; }
     });
 
-  // KIRIM WA ANTI-GAGAL (MENGGUNAKAN JALUR RESMI WA.ME)
+ // KIRIM WA ANTI-GAGAL (JALUR API RESMI)
     document.getElementById('btnWA').addEventListener('click', function() {
         if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
             alert("Belum ada data pasien untuk dikirim.");
@@ -483,10 +483,10 @@
             navigator.clipboard.writeText(teksWA).catch(e => console.log(e));
         }
 
-        // JALUR WA.ME: Paling stabil untuk membawa nomor ke WA Web tanpa hilang
-        let tautanWA = `https://wa.me/?text=${encodeURIComponent(teksWA)}`;
+        // JALUR API WHATSAPP: Mengunci parameter "phone=" agar tidak hilang di WA Web
+        let tautanWA = `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
         if (noWa && noWa.length > 5) {
-            tautanWA = `https://wa.me/${noWa}?text=${encodeURIComponent(teksWA)}`;
+            tautanWA = `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
         }
         
         // Buka Jendela
