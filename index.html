@@ -23,7 +23,7 @@
         .btn-scan { background: #e67e22; width: auto; padding: 12px 15px; }
         
         .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
-        #searchResults { max-height: 320px; overflow-y: auto; padding-right: 8px; }
+        #searchResults { max-height: 350px; overflow-y: auto; padding-right: 8px; }
         #searchResults::-webkit-scrollbar { width: 6px; }
         #searchResults::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 10px; }
         .history-card { background: #fff; padding: 15px; margin-top: 10px; border-left: 4px solid #3498db; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 6px; }
@@ -134,22 +134,24 @@
             <img id="previewLidah" class="image-preview">
         </div>
 
+        <!-- POSISI MATA DITUKAR: KANAN DI KIRI, KIRI DI KANAN -->
         <div class="form-row">
             <div class="form-col" style="background:#e8f4f8; padding:15px; border-radius:8px;">
-                <label>2. Iris KIRI (Opsional):</label>
-                <div style="display:flex; flex-direction:column; gap:5px;">
-                    <input type="file" id="fotoIrisKiri" accept="image/*">
-                    <button type="button" onclick="bukaWebcam('irisKiri')" style="padding:8px 12px; font-size:13px; background:#2980b9;">👁️ Kamera Kiri</button>
-                </div>
-                <img id="previewIrisKiri" class="image-preview">
-            </div>
-            <div class="form-col" style="background:#e8f4f8; padding:15px; border-radius:8px;">
-                <label>3. Iris KANAN (Opsional):</label>
+                <label>2. Iris KANAN (Opsional):</label>
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <input type="file" id="fotoIrisKanan" accept="image/*">
                     <button type="button" onclick="bukaWebcam('irisKanan')" style="padding:8px 12px; font-size:13px; background:#2980b9;">👁️ Kamera Kanan</button>
                 </div>
                 <img id="previewIrisKanan" class="image-preview">
+            </div>
+
+            <div class="form-col" style="background:#e8f4f8; padding:15px; border-radius:8px;">
+                <label>3. Iris KIRI (Opsional):</label>
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <input type="file" id="fotoIrisKiri" accept="image/*">
+                    <button type="button" onclick="bukaWebcam('irisKiri')" style="padding:8px 12px; font-size:13px; background:#2980b9;">👁️ Kamera Kiri</button>
+                </div>
+                <img id="previewIrisKiri" class="image-preview">
             </div>
         </div>
 
@@ -174,9 +176,7 @@
 </div>
 
 <script>
-    // ==========================================
-    // ⚠️ PASTIKAN URL WEB APP AKANG DIMASUKKAN DI SINI
-    // ==========================================
+    // ⚠️ GANTI DENGAN URL WEB APP BARU SETELAH DEPLOY CODE.GS!
     const scriptURL = "https://script.google.com/macros/s/AKfycbwLgS0RmdtM9TwGcrC2g-EvVS-kbk1qL3RC24O7pzUc44xHOnS48fqIy0I_mIwmNxszvQ/exec"; 
 
     const saranGejala = {
@@ -242,6 +242,7 @@
         }, function(error) { });
     });
 
+    // PENCARIAN DENGAN FITUR BACA RIWAYAT LALU
     document.getElementById('btnSearch').addEventListener('click', async function() {
         const keyword = document.getElementById('inputSearch').value;
         if(!keyword) return;
@@ -258,6 +259,11 @@
                     let nrmAman = r.nrm.replace(/'/g, "\\'");
                     let namaAman = r.nama.replace(/'/g, "\\'");
                     let waAman = r.wa ? r.wa.toString().replace(/'/g, "") : ''; 
+                    
+                    let formatMakananRiwayat = r.makanan || "-";
+                    if (formatMakananRiwayat.includes("1. Anjuran")) {
+                        formatMakananRiwayat = formatMakananRiwayat.replace(/1\.\s*Anjuran\s*Makanan\s*:/gi, '<b>1. Anjuran Makanan:</b>').replace(/2\.\s*Pantangan\s*Makanan\s*:/gi, '<br><b>2. Pantangan Makanan:</b>').replace(/3\.\s*Kombinasi\s*Makanan\s*Panas\s*dan\s*Dingin\s*:/gi, '<br><b>3. Kombinasi Makanan Panas dan Dingin:</b>');
+                    }
 
                     html += `<div class="history-card">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -266,6 +272,18 @@
                                 </div>
                                 <span style="font-size:11px; color:#7f8c8d;">Kunjungan Terakhir: ${tgl}</span><br>
                                 <b style="color:#e74c3c">Diagnosis: ${r.diagnosis}</b>
+                                
+                                <details style="margin-top:10px; background:#f9f9f9; padding:8px 12px; border-radius:6px; border:1px solid #eee;">
+                                    <summary style="font-size:12px; font-weight:bold; color:#2980b9; cursor:pointer; outline:none;">Lihat Rincian Terapi Sebelumnya</summary>
+                                    <div style="font-size:12px; margin-top:10px; line-height:1.6; color:#444;">
+                                        <b>🎯 Tung:</b> ${r.tung || "-"}<br>
+                                        <b>⚖️ Tan:</b> ${r.tan || "-"}<br>
+                                        <b>🤲 Tuina:</b> ${r.tuina || "-"}<br>
+                                        <b>🔴 Bekam:</b> ${r.bekam || "-"}<br>
+                                        <b>🌿 Jamu:</b> ${r.jamu || "-"}<hr style="border: 0.5px solid #ddd; margin:10px 0;">
+                                        <b>🥗 Makanan:</b> ${formatMakananRiwayat}
+                                    </div>
+                                </details>
                                 ${fotoHtml}
                              </div>`;
                 });
@@ -365,12 +383,8 @@
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
         
-        // --- ALARM ANTI-DUPLIKASI ---
         if(document.getElementById('nrmKlien').value === "") {
-            const konfirmasi = confirm("⚠️ NRM KOSONG!\n\nSistem akan mendaftarkan ini sebagai PASIEN BARU dan membuat NRM baru.\n\nApakah Anda yakin ini pasien baru?\n(Jika ini Pasien Lama, klik BATAL lalu gunakan kotak Pencarian di atas).");
-            if(!konfirmasi) {
-                return;
-            }
+            if(!confirm("⚠️ NRM KOSONG!\n\nSistem akan mendaftarkan ini sebagai PASIEN BARU dan membuat NRM baru. Lanjutkan?")) return; 
         }
 
         btn.disabled = true; btn.innerText = "🧠 Memproses AI...";
@@ -401,7 +415,6 @@
                 const rd = result.data;
                 dataPasienTerakhir = { nama: payload.namaKlien, tensi: payload.tensi, diagnosis: rd.diagnosis, penjelasan: rd.penjelasan, gerak: rd.gerak, makanan: rd.makanan };
                 
-                // --- FORMATTING MAKANAN TERPISAH (BOLD) ---
                 let formatMakananWeb = rd.makanan;
                 if (formatMakananWeb && formatMakananWeb.includes("1. Anjuran")) {
                     formatMakananWeb = formatMakananWeb
@@ -419,6 +432,7 @@
                     <i style="color:#555;">${rd.penjelasan}</i><hr style="border: 0.5px solid #eee; margin:15px 0;">
                     <b>🎯 Tung:</b> ${rd.tung}<br><br>
                     <b>⚖️ Tan:</b> ${rd.tan}<br><br>
+                    <b>🧠 YNSA:</b> ${rd.yamamoto}<br><br>
                     <b>🤲 Tuina:</b> ${rd.tuina}<br><br>
                     <b>🔴 Bekam:</b> ${rd.bekam}<br><br>
                     <b>🌿 Jamu:</b> ${rd.jamu}<hr style="border: 0.5px solid #eee; margin:15px 0;">
@@ -426,7 +440,6 @@
                     <b>🥗 Makanan:</b> ${formatMakananWeb}
                 `;
                 
-                // GENERATE QR
                 document.getElementById('nrmText').innerText = rd.nrm;
                 document.getElementById('qrcodeBox').innerHTML = ""; 
                 new QRCode(document.getElementById("qrcodeBox"), { text: rd.nrm, width: 150, height: 150 });
@@ -438,7 +451,7 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan Rekam Medis"; }
     });
 
-    // --- PERBAIKAN TOMBOL WHATSAPP (OTOMATIS COPY & REDIRECT) ---
+    // KIRIM WA ANTI-GAGAL
     document.getElementById('btnWA').addEventListener('click', function() {
         if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
             alert("Belum ada data pasien untuk dikirim.");
@@ -449,7 +462,6 @@
         if (noWa && noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
         noWa = noWa ? noWa.replace(/\D/g, '') : ''; 
 
-        // FORMAT PESAN WA (BOLD & RAPI)
         let mknWA = dataPasienTerakhir.makanan;
         if (mknWA && mknWA.includes("1. Anjuran")) {
             mknWA = mknWA
@@ -460,25 +472,24 @@
 
         const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${mknWA}\n\n_Semoga lekas sembuh!_`;
         
-        // 1. Salin Teks Otomatis ke Memori (Clipboard)
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(teksWA).then(() => {
-                console.log("Teks berhasil disalin ke memori.");
-            }).catch(e => {
-                console.log("Gagal menyalin otomatis: ", e);
-            });
+            navigator.clipboard.writeText(teksWA).catch(e => console.log(e));
         }
         
-        // 2. Membuka Tautan WA Langsung
-        let tautanWA = `https://wa.me/?text=` + encodeURIComponent(teksWA);
+        let tautanWA = `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
         if (noWa && noWa.length > 5) {
-            tautanWA = `https://wa.me/${noWa}?text=` + encodeURIComponent(teksWA);
+            tautanWA = `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
         }
         
-        window.open(tautanWA, '_blank');
+        // Coba Buka Jendela Baru, Jika Terblokir, Pindah Halaman Otomatis
+        try {
+            let win = window.open(tautanWA, '_blank');
+            if(!win) { window.location.href = tautanWA; }
+        } catch(e) {
+            window.location.href = tautanWA;
+        }
     });
 
-    // RESET FORM PASIEN BARU
     document.getElementById('btnReset').addEventListener('click', function() {
         if(confirm("Bersihkan form untuk mendaftar pasien baru?")) {
             document.getElementById('formKlinis').reset();
