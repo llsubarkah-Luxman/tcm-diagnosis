@@ -454,7 +454,7 @@
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan Rekam Medis"; }
     });
 
-    // KIRIM WA ANTI-GAGAL
+   // KIRIM WA ANTI-GAGAL (DETEKSI HP VS LAPTOP)
     document.getElementById('btnWA').addEventListener('click', function() {
         if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
             alert("Belum ada data pasien untuk dikirim.");
@@ -475,22 +475,23 @@
 
         const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Tensi Darah:* ${dataPasienTerakhir.tensi}\n\n*Diagnosis Sindrom:* ${dataPasienTerakhir.diagnosis}\n_Keterangan:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak (Olahraga):*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Terapi Makanan:*\n${mknWA}\n\n_Semoga lekas sembuh!_`;
         
-        // Memaksa proses penyalinan ke clipboard (di latar belakang)
+        // Memaksa proses penyalinan ke clipboard
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(teksWA).catch(e => console.log(e));
         }
-        
-        let tautanWA = `https://api.whatsapp.com/send?text=${encodeURIComponent(teksWA)}`;
+
+        // DETEKSI PERANGKAT (HP atau Laptop)
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        let baseUrl = isMobile ? 'https://api.whatsapp.com/send' : 'https://web.whatsapp.com/send';
+
+        let tautanWA = `${baseUrl}?text=${encodeURIComponent(teksWA)}`;
         if (noWa && noWa.length > 5) {
-            tautanWA = `https://api.whatsapp.com/send?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
+            tautanWA = `${baseUrl}?phone=${noWa}&text=${encodeURIComponent(teksWA)}`;
         }
         
-        // Coba Buka Jendela Baru, Jika Terblokir oleh Browser HP, Pindah Halaman Otomatis
         try {
             let win = window.open(tautanWA, '_blank');
-            if(!win) { 
-                window.location.href = tautanWA; 
-            }
+            if(!win) { window.location.href = tautanWA; }
         } catch(e) {
             window.location.href = tautanWA;
         }
