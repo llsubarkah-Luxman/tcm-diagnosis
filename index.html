@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Klinik TCM - AI Iridologi & Lidah</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Wajib untuk Scan & Cetak QR Code -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -56,7 +55,6 @@
     </div>
 </div>
 
-<!-- Kamera Perangkat Universal -->
 <div id="webcamModal">
     <h3 id="webcamTitle" style="color:#fff; margin-bottom:15px;">Kamera Perangkat</h3>
     <video id="webcamVideo" autoplay playsinline></video>
@@ -70,7 +68,6 @@
 <div class="container" id="mainApp" style="display:none;">
     <h2 id="judulKlinik">Klinik TCM & Iridologi</h2>
 
-    <!-- PANEL PENCARIAN & SCANNER QR -->
     <div class="search-box">
         <h4 style="margin-top:0; color:#2980b9;">🔍 Pencarian & Scan QR Pasien</h4>
         <div style="display: flex; gap: 10px;">
@@ -85,7 +82,7 @@
     <form id="formKlinis">
         <div class="section-title">👤 Profil Klien</div>
         <div class="form-row">
-            <div class="form-col"><label>NRM (Pasien Baru Otomatis):</label><input type="text" id="nrmKlien" placeholder="Otomatis diisi sistem" readonly style="background-color: #f1f3f5; cursor:not-allowed;"></div>
+            <div class="form-col"><label>NRM (Pasien Baru Otomatis):</label><input type="text" id="nrmKlien" placeholder="Kosongkan jika baru" readonly style="background-color: #f1f3f5; cursor:not-allowed;"></div>
             <div class="form-col"><label>Tensi & Nadi:</label><input type="text" id="tensiKlien" placeholder="Contoh: 120/80/80"></div>
         </div>
         <div class="form-row">
@@ -128,7 +125,6 @@
         
         <div class="section-title">📸 Modul AI Vision (Lidah & Iris Ganda)</div>
         
-        <!-- Foto Lidah -->
         <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px;">
             <label>1. Foto Lidah (Wajib):</label>
             <div style="display:flex; gap:10px; align-items:center;">
@@ -138,7 +134,6 @@
             <img id="previewLidah" class="image-preview">
         </div>
 
-        <!-- Foto Iris Kiri & Kanan -->
         <div class="form-row">
             <div class="form-col" style="background:#e8f4f8; padding:15px; border-radius:8px;">
                 <label>2. Iris KIRI (Opsional):</label>
@@ -164,7 +159,6 @@
     <div id="hasilContainer" style="display:none; margin-top:30px; border-top:2px dashed #ccc; padding-top:20px;">
         <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil Disimpan!</h3>
         
-        <!-- OUTPUT QR CODE (Pilar ke-1) -->
         <div id="qrOutput">
             <h4 style="margin-top:0; color:#34495e;">ID Kartu Pasien Digital</h4>
             <div id="qrcodeBox" style="display:flex; justify-content:center; margin-bottom:10px;"></div>
@@ -174,14 +168,15 @@
 
         <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; margin-top:15px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
         
-        <!-- TOMBOL WA & RESET -->
         <button type="button" id="btnWA" class="btn-wa">Kirim Edukasi via WA</button>
         <button type="button" id="btnReset" class="btn-reset">🔄 Pendaftaran Pasien Baru</button>
     </div>
 </div>
 
 <script>
-    // ⚠️ MASUKKAN URL APP SCRIPT ANDA DI SINI (Yang sudah 3 Sheet)
+    // ==========================================
+    // ⚠️ INI URL WEB APP TERBARU AKANG
+    // ==========================================
     const scriptURL = "https://script.google.com/macros/s/AKfycbzmoSpmZW8xCLAHuNBeohPy-tNKnNw62Bvx-swcFqNwS8boLav6w8yaVrPhCzQEMRmN/exec"; 
 
     const saranGejala = {
@@ -226,7 +221,6 @@
         location.reload();
     });
 
-    // SCANNER HTML5-QRCODE
     let html5QrcodeScanner = null;
     document.getElementById('btnScanQR').addEventListener('click', function() {
         const readerDiv = document.getElementById('reader');
@@ -248,7 +242,6 @@
         }, function(error) { });
     });
 
-    // PENCARIAN DATA (Untuk Sheet 3)
     document.getElementById('btnSearch').addEventListener('click', async function() {
         const keyword = document.getElementById('inputSearch').value;
         if(!keyword) return;
