@@ -109,33 +109,29 @@
         </select>
         <textarea id="dataWawancara" style="display:none;" required></textarea>
 
-        <div class="section-title">📸 Modul Visi AI (Hingga 11 Foto)</div>
+<div class="section-title">📸 Modul Visi AI (Hingga 11 Foto)</div>
         
         <label>1. Foto Lidah (Wajib):</label>
         <input type="file" id="fotoLidah" accept="image/*" required>
 
-        <details>
-            <summary>2. Iris Mata (Kiri & Kanan)</summary>
+        <details open>
+            <summary>2. Iris Mata (Posisi Anatomis/Cermin)</summary>
             <div class="form-row" style="margin-top:10px;">
-                <div class="form-col"><label>Kiri</label><input type="file" id="irisKiri" accept="image/*"></div>
-                <div class="form-col"><label>Kanan</label><input type="file" id="irisKanan" accept="image/*"></div>
+                <!-- KANAN DI KIRI LAYAR -->
+                <div class="form-col">
+                    <label>Iris KANAN</label>
+                    <input type="file" id="irisKanan" accept="image/*">
+                </div>
+                <!-- KIRI DI KANAN LAYAR -->
+                <div class="form-col">
+                    <label>Iris KIRI</label>
+                    <input type="file" id="irisKiri" accept="image/*">
+                </div>
             </div>
         </details>
 
         <details>
-            <summary>3. Sklera KIRI (4 Kuadran)</summary>
-            <div class="form-row" style="margin-top:10px;">
-                <div class="form-col"><label>Atas</label><input type="file" id="sklKiriAtas" accept="image/*"></div>
-                <div class="form-col"><label>Bawah</label><input type="file" id="sklKiriBawah" accept="image/*"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-col"><label>Dalam (Hidung)</label><input type="file" id="sklKiriDalam" accept="image/*"></div>
-                <div class="form-col"><label>Luar (Telinga)</label><input type="file" id="sklKiriLuar" accept="image/*"></div>
-            </div>
-        </details>
-
-        <details>
-            <summary>4. Sklera KANAN (4 Kuadran)</summary>
+            <summary>3. Sklera KANAN (4 Kuadran)</summary>
             <div class="form-row" style="margin-top:10px;">
                 <div class="form-col"><label>Atas</label><input type="file" id="sklKananAtas" accept="image/*"></div>
                 <div class="form-col"><label>Bawah</label><input type="file" id="sklKananBawah" accept="image/*"></div>
@@ -143,6 +139,18 @@
             <div class="form-row">
                 <div class="form-col"><label>Dalam (Hidung)</label><input type="file" id="sklKananDalam" accept="image/*"></div>
                 <div class="form-col"><label>Luar (Telinga)</label><input type="file" id="sklKananLuar" accept="image/*"></div>
+            </div>
+        </details>
+
+        <details>
+            <summary>4. Sklera KIRI (4 Kuadran)</summary>
+            <div class="form-row" style="margin-top:10px;">
+                <div class="form-col"><label>Atas</label><input type="file" id="sklKiriAtas" accept="image/*"></div>
+                <div class="form-col"><label>Bawah</label><input type="file" id="sklKiriBawah" accept="image/*"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-col"><label>Dalam (Hidung)</label><input type="file" id="sklKiriDalam" accept="image/*"></div>
+                <div class="form-col"><label>Luar (Telinga)</label><input type="file" id="sklKiriLuar" accept="image/*"></div>
             </div>
         </details>
 
