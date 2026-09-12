@@ -23,6 +23,12 @@
         .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
         details { background:#f8f9fa; padding:12px; border-radius:8px; margin-top:10px; border:1px solid #ddd; }
         summary { font-weight:bold; cursor:pointer; color:#2980b9; outline:none; }
+        
+        /* Gaya Khusus untuk Riwayat Terapi Lama */
+        .riwayat-lama { background-color: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 10px; margin-bottom: 15px; }
+        .riwayat-lama h4 { margin-top: 0; color: #856404; margin-bottom: 10px; }
+        .btn-wa { background: #25D366; margin-top: 15px; }
+        .btn-wa:hover { background: #20bd5a; }
     </style>
 </head>
 <body>
@@ -41,6 +47,7 @@
 <div class="container" id="mainApp" style="display:none;">
     <h2 id="judulKlinik">Klinik TCM</h2>
 
+    <!-- KOTAK PENCARIAN -->
     <div class="search-box">
         <h4 style="margin-top:0; color:#2980b9;">🔍 Cari Riwayat Pasien Lama</h4>
         <div style="display: flex; gap: 10px;">
@@ -48,6 +55,15 @@
             <button type="button" id="btnSearch" style="width: 80px;">Cari</button>
         </div>
         <div id="searchResults"></div>
+    </div>
+
+    <!-- TAMPILAN RIWAYAT TERAPI LAMA (MUNCUL JIKA PASIEN DIPILIH) -->
+    <div id="containerRiwayatLama" class="riwayat-lama" style="display: none;">
+        <h4>📜 Riwayat Terapi Terakhir:</h4>
+        <details>
+            <summary style="color:#856404;">Klik untuk lihat resep sebelumnya</summary>
+            <div id="isiRiwayatLama" style="font-size: 13px; margin-top: 10px; line-height: 1.5; color: #555;"></div>
+        </details>
     </div>
 
     <form id="formKlinis">
@@ -62,7 +78,7 @@
             <div class="form-col"><label>BB (Kg):</label><input type="number" id="beratKlien" required></div>
         </div>
         <div class="form-row">
-            <div class="form-col"><label>No. WhatsApp:</label><input type="number" id="noWaKlien"></div>
+            <div class="form-col"><label>No. WhatsApp:</label><input type="text" id="noWaKlien"></div>
         </div>
 
         <div class="section-title">🩺 Observasi Kunjungan</div>
@@ -109,24 +125,16 @@
         </select>
         <textarea id="dataWawancara" style="display:none;" required></textarea>
 
-<div class="section-title">📸 Modul Visi AI (Hingga 11 Foto)</div>
+        <div class="section-title">📸 Modul Visi AI (Hingga 11 Foto)</div>
         
         <label>1. Foto Lidah (Wajib):</label>
         <input type="file" id="fotoLidah" accept="image/*" required>
 
         <details open>
-            <summary>2. Iris Mata (Posisi Anatomis/Cermin)</summary>
+            <summary>2. Iris Mata (Posisi Anatomis)</summary>
             <div class="form-row" style="margin-top:10px;">
-                <!-- KANAN DI KIRI LAYAR -->
-                <div class="form-col">
-                    <label>Iris KANAN</label>
-                    <input type="file" id="irisKanan" accept="image/*">
-                </div>
-                <!-- KIRI DI KANAN LAYAR -->
-                <div class="form-col">
-                    <label>Iris KIRI</label>
-                    <input type="file" id="irisKiri" accept="image/*">
-                </div>
+                <div class="form-col"><label>Iris KANAN</label><input type="file" id="irisKanan" accept="image/*"></div>
+                <div class="form-col"><label>Iris KIRI</label><input type="file" id="irisKiri" accept="image/*"></div>
             </div>
         </details>
 
@@ -162,19 +170,20 @@
         <div style="text-align:center; margin-bottom:15px;">
             <a id="linkFolder" href="#" target="_blank" style="color:#e67e22; text-decoration:none; font-weight:bold;">📁 Buka Folder Arsip Pasien</a>
         </div>
-        <div style="background:#f9f9f9; padding:15px; border-radius:8px; border-left:4px solid #8e44ad; margin-bottom:15px;">
-            <b style="color:#8e44ad;">👁️ Analisis Mata AI:</b>
-            <p id="resMata" style="font-size:14px; margin-top:5px;"></p>
-        </div>
-        <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
+        
+        <div id="resLengkap" style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; font-size:14px; line-height:1.6;"></div>
+        
+        <button id="btnWA" class="btn-wa" type="button">Kirim Edukasi Terapi ke WhatsApp</button>
         <button type="button" id="btnReset" style="background:#95a5a6; margin-top: 15px;">🔄 Pasien Baru</button>
     </div>
 </div>
 
 <script>
-    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT TERBARU DI SINI
+    // ⚠️ GANTI DENGAN URL WEB APP AKANG
     const scriptURL = "https://script.google.com/macros/s/AKfycbwLgS0RmdtM9TwGcrC2g-EvVS-kbk1qL3RC24O7pzUc44xHOnS48fqIy0I_mIwmNxszvQ/exec"; 
     
+    let dataPasienTerakhir = {}; // Simpan data untuk WA
+
     function gabungWawancara() {
         const w1 = document.getElementById('wawancara1').value;
         const w2 = document.getElementById('wawancara2').value;
@@ -182,25 +191,24 @@
         document.getElementById('dataWawancara').value = "Beban: " + w1 + "\nEmosi: " + w2 + "\nTidur: " + w3;
     }
 
-    // FUNGSI KOMPRESI GAMBAR (Canvas)
     async function compressImage(fileId) {
         return new Promise((resolve) => {
             const fileInput = document.getElementById(fileId);
-            if (!fileInput || !fileInput.files[0]) return resolve(""); // Jika kosong
+            if (!fileInput || !fileInput.files[0]) return resolve(""); 
             
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const maxWidth = 800; // Ukuran aman untuk AI dan ringan dikirim
+                    const maxWidth = 800; 
                     const scaleSize = maxWidth / img.width;
                     canvas.width = maxWidth;
                     canvas.height = img.height * scaleSize;
                     
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.6)); // Kualitas 60%
+                    resolve(canvas.toDataURL('image/jpeg', 0.6)); 
                 };
                 img.src = event.target.result;
             };
@@ -245,7 +253,7 @@
     window.pilihPasien = function(data) {
         document.getElementById('nrmKlien').value = data.nrm;
         document.getElementById('namaKlien').value = data.nama;
-        document.getElementById('noWaKlien').value = data.wa;
+        document.getElementById('noWaKlien').value = data.wa ? data.wa.replace(/'/g, "") : "";
         document.getElementById('umurKlien').value = data.umur;
         document.getElementById('genderKlien').value = data.gender;
         document.getElementById('beratKlien').value = data.berat;
@@ -254,6 +262,16 @@
         document.getElementById('wawancara2').value = "";
         document.getElementById('wawancara3').value = "";
         document.getElementById('dataWawancara').value = "";
+        
+        // Tampilkan Riwayat Lama
+        document.getElementById('containerRiwayatLama').style.display = "block";
+        document.getElementById('isiRiwayatLama').innerHTML = `
+            <b>Diagnosis:</b> ${data.diagnosis}<br>
+            <b>Tung:</b> ${data.tung}<br>
+            <b>Tan:</b> ${data.tan}<br>
+            <b>Jamu:</b> ${data.jamu}
+        `;
+
         document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
     };
 
@@ -262,9 +280,8 @@
         gabungWawancara();
 
         const btn = document.getElementById('btnSubmit');
-        btn.disabled = true; btn.innerText = "⏳ Sedang Mengompres 11 Foto...";
+        btn.disabled = true; btn.innerText = "⏳ Sedang Mengompres & Menganalisis AI...";
         
-        // Eksekusi kompresi paralel untuk mempercepat proses
         const [
             imgLidah, imgIrisKiri, imgIrisKanan,
             imgSklKiriAtas, imgSklKiriBawah, imgSklKiriDalam, imgSklKiriLuar,
@@ -274,8 +291,6 @@
             compressImage('sklKiriAtas'), compressImage('sklKiriBawah'), compressImage('sklKiriDalam'), compressImage('sklKiriLuar'),
             compressImage('sklKananAtas'), compressImage('sklKananBawah'), compressImage('sklKananDalam'), compressImage('sklKananLuar')
         ]);
-
-        btn.innerText = "🧠 AI Sedang Membedah Data...";
 
         const payload = {
             action: "insert", 
@@ -289,7 +304,6 @@
             keluhan: document.getElementById('keluhanUtama').value,
             gejala: document.getElementById('gejalaKlien').value, 
             wawancara: document.getElementById('dataWawancara').value,
-            // Memasukkan hasil kompresi (Base64)
             imgLidah, imgIrisKiri, imgIrisKanan,
             imgSklKiriAtas, imgSklKiriBawah, imgSklKiriDalam, imgSklKiriLuar,
             imgSklKananAtas, imgSklKananBawah, imgSklKananDalam, imgSklKananLuar
@@ -301,10 +315,19 @@
             
             if (result.status === "sukses") {
                 const rd = result.data;
-                
                 document.getElementById('linkFolder').href = rd.folderUrl;
-                document.getElementById('resMata').innerText = rd.analisis_mata || "Hanya memproses foto Lidah.";
+                
+                // Format Makanan untuk HTML
+                let formatMakananWeb = rd.makanan.replace(/\n/g, '<br>');
+                
                 document.getElementById('resLengkap').innerHTML = `
+                    <div style="background:#f9f9f9; padding:15px; border-radius:8px; border-left:4px solid #8e44ad; margin-bottom:15px;">
+                        <b style="color:#8e44ad; font-size:15px;">👁️ Analisis Mata (AI):</b>
+                        <ul style="margin-top:5px; margin-bottom:0; padding-left:20px;">
+                            <li><b>Iris:</b> ${rd.iris || "Tidak ada data iris."}</li>
+                            <li><b>Sklera:</b> ${rd.sklera || "Tidak ada data sklera."}</li>
+                        </ul>
+                    </div>
                     <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
                     <i style="color:#555;">${rd.penjelasan}</i><hr style="border: 0.5px solid #eee; margin:15px 0;">
                     <b>🎯 Tung:</b> ${rd.tung}<br><br>
@@ -314,12 +337,54 @@
                     <b>🔴 Bekam:</b> ${rd.bekam}<br><br>
                     <b>🌿 Jamu:</b> ${rd.jamu}<hr style="border: 0.5px solid #eee; margin:15px 0;">
                     <b>🏃 Gerak:</b> ${rd.gerak}<br><br>
-                    <b>🥗 Makanan:</b> ${rd.makanan}
+                    <b>🥗 Makanan:</b> ${formatMakananWeb}
                 `;
+                
+                // Simpan data untuk WA
+                dataPasienTerakhir = {
+                    nama: payload.namaKlien,
+                    diagnosis: rd.diagnosis,
+                    penjelasan: rd.penjelasan,
+                    gerak: rd.gerak,
+                    makanan: rd.makanan // Asli tanpa <br>
+                };
+
                 document.getElementById('hasilContainer').style.display = "block"; 
             } else { alert("Gagal: " + result.pesan); }
         } catch (e) { alert("Server Sibuk/Timeout. Coba lagi."); } 
         finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan ke Arsip"; }
+    });
+
+    // KIRIM WHATSAPP DENGAN COPY OTOMATIS & FALLBACK TAB BARU
+    document.getElementById('btnWA').addEventListener('click', function() {
+        if (!dataPasienTerakhir || !dataPasienTerakhir.nama) {
+            alert("Belum ada data pasien untuk dikirim.");
+            return;
+        }
+
+        let noWa = document.getElementById('noWaKlien').value;
+        if (noWa && noWa.startsWith('0')) { noWa = '62' + noWa.substring(1); }
+        noWa = noWa ? noWa.replace(/\D/g, '') : ''; 
+
+        // Format Makanan agar rapi di WA
+        let formatMakananWA = dataPasienTerakhir.makanan || "";
+        if (formatMakananWA.includes("1.")) {
+            formatMakananWA = formatMakananWA
+                .replace(/1\.\s*Anjuran\s*Makanan\s*:/gi, '• *Anjuran:*')
+                .replace(/2\.\s*Pantangan\s*Makanan\s*:/gi, '\n• *Pantangan:*')
+                .replace(/3\.\s*Keseimbangan\s*Termal\s*:/gi, '\n• *Keseimbangan Termal:*');
+        }
+
+        const teksWA = `*HASIL KONSULTASI TCM*\n\n*Nama Pasien:* ${dataPasienTerakhir.nama}\n*Diagnosis:* ${dataPasienTerakhir.diagnosis}\n_Ket:_ ${dataPasienTerakhir.penjelasan}\n\n*🏃 Saran Terapi Gerak:*\n${dataPasienTerakhir.gerak}\n\n*🥗 Edukasi Makanan:*\n${formatMakananWA}\n\n_Semoga lekas sembuh!_`;
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(teksWA).catch(e => console.log(e));
+        }
+        
+        let tautanWA = noWa ? `https://wa.me/${noWa}?text=${encodeURIComponent(teksWA)}` : `https://wa.me/?text=${encodeURIComponent(teksWA)}`;
+        
+        let win = window.open(tautanWA, '_blank');
+        if(!win) { window.location.href = tautanWA; }
     });
 
     document.getElementById('btnReset').addEventListener('click', () => location.reload());
