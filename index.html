@@ -36,7 +36,6 @@
         /* Modal Webcam */
         #webcamModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; flex-direction:column; align-items:center; justify-content:center; }
         #webcamVideo { width:90%; max-width:500px; border-radius:8px; border: 3px solid #fff; }
-        .section-title { margin-top: 25px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #3498db; color: #2980b9; font-size: 16px; font-weight:bold; }
     </style>
 </head>
 <body>
@@ -110,43 +109,8 @@
         <label>Rincian Gejala Pasien:</label>
         <textarea id="gejalaKlien" rows="2" placeholder="Ketik rincian gejala penyerta secara bebas di sini..." required style="margin-bottom:15px;"></textarea>
 
-        <!-- FORMAT WAWANCARA BARU (DROPDOWN) -->
-        <div class="section-title">💬 Wawancara Psikologis (Shen)</div>
-        <div class="form-row">
-            <div class="form-col">
-                <label>1. Tingkat Stres / Pikiran:</label>
-                <select id="waStres" required style="background-color: #f9f9f9;">
-                    <option value="" disabled selected>-- Pilih --</option>
-                    <option value="1 - Sangat Santai">1 - Sangat Santai</option>
-                    <option value="2 - Agak Santai">2 - Agak Santai</option>
-                    <option value="3 - Netral / Biasa">3 - Netral / Biasa</option>
-                    <option value="4 - Cukup Terbebani">4 - Cukup Terbebani</option>
-                    <option value="5 - Sangat Tertekan">5 - Sangat Tertekan / Stres</option>
-                </select>
-            </div>
-            <div class="form-col">
-                <label>2. Kondisi Emosi Saat Ini:</label>
-                <select id="waEmosi" required style="background-color: #f9f9f9;">
-                    <option value="" disabled selected>-- Pilih --</option>
-                    <option value="Damai / Stabil">Damai / Stabil</option>
-                    <option value="Mudah Marah / Tersinggung">Mudah Marah / Tersinggung</option>
-                    <option value="Sering Sedih / Murung">Sering Sedih / Murung</option>
-                    <option value="Memendam Perasaan / Cemas">Memendam Perasaan / Cemas</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-row" style="margin-bottom: 20px;">
-            <div class="form-col">
-                <label>3. Kualitas Tidur:</label>
-                <select id="waTidur" required style="background-color: #f9f9f9;">
-                    <option value="" disabled selected>-- Pilih --</option>
-                    <option value="Nyenyak & Bangun Segar">Nyenyak & Bangun Segar</option>
-                    <option value="Sulit Mulai Tidur">Sulit Mulai Tidur</option>
-                    <option value="Sering Terbangun Tengah Malam">Sering Terbangun Tengah Malam</option>
-                    <option value="Banyak Mimpi / Gelisah">Banyak Mimpi / Gelisah</option>
-                </select>
-            </div>
-        </div>
+        <label>Catatan Wawancara (Fokus Emosi / Shen):</label>
+        <textarea id="dataWawancara" rows="3" placeholder="Gali kondisi psikis: Apakah sedang stres? Ada emosi tertahan? Bagaimana kualitas tidurnya?" required></textarea>
         
         <label style="margin-top:15px;">Unggah Foto Lidah:</label>
         <div style="display:flex; gap:10px; align-items:center;">
@@ -188,6 +152,7 @@
     document.getElementById('btnOpenWebcam').addEventListener('click', async function() {
         document.getElementById('webcamModal').style.display = 'flex';
         try {
+            // Mencoba membuka kamera (prioritas kamera belakang jika ada)
             videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             document.getElementById('webcamVideo').srcObject = videoStream;
         } catch (err) {
@@ -214,12 +179,14 @@
         document.getElementById('previewGambar').src = imageBase64Data;
         document.getElementById('previewGambar').style.display = 'block';
         
+        // Nonaktifkan kewajiban (required) pada input file karena foto sudah diambil via Webcam
         document.getElementById('fotoLidah').required = false;
 
         if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); }
         document.getElementById('webcamModal').style.display = 'none';
     });
 
+    // FUNGSI LAINNYA TETAP SAMA
     document.getElementById('keluhanUtama').addEventListener('change', function() {
         const keluhan = this.value;
         const inputManual = document.getElementById('keluhanManual');
@@ -311,7 +278,7 @@
                                     <button type="button" onclick="pilihPasien('${nrmAman}', '${namaAman}', '${waAman}')" style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; border-radius:6px; margin:0;">Pilih Pasien</button>
                                 </div>
                                 <span style="font-size:11px; color:#7f8c8d;">Kunjungan: ${tgl}</span><br>
-                                <span style="color:#555">Wawancara: ${r.wawancara}</span><br>
+                                <span style="color:#555">Emosi (Shen): ${r.wawancara}</span><br>
                                 <b style="color:#e74c3c">Diagnosis: ${r.diagnosis}</b>
                                 
                                 <details style="margin-top:10px; background:#f9f9f9; padding:8px 12px; border-radius:6px; border:1px solid #eee;">
@@ -340,12 +307,7 @@
         document.getElementById('nrmKlien').value = nrm;
         document.getElementById('namaKlien').value = nama;
         document.getElementById('noWaKlien').value = wa; 
-        
-        // Reset dropdown wawancara agar siap untuk kunjungan yang baru
-        document.getElementById('waStres').value = "";
-        document.getElementById('waEmosi').value = "";
-        document.getElementById('waTidur').value = "";
-        
+        document.getElementById('dataWawancara').value = "1. Beban Pikiran/Stres : \n2. Emosi Tertahan : \n3. Kualitas Tidur : ";
         document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
     };
 
@@ -357,6 +319,7 @@
                 document.getElementById('previewGambar').src = event.target.result;
                 document.getElementById('previewGambar').style.display = 'block';
                 imageBase64Data = event.target.result;
+                // Pastikan required file input dikembalikan jika mereka menggunakan tombol Choose File
                 document.getElementById('fotoLidah').required = true;
             }
             reader.readAsDataURL(file);
@@ -379,12 +342,6 @@
         const valKeluhan = document.getElementById('keluhanUtama').value;
         const finalKeluhan = valKeluhan === "Lainnya" ? document.getElementById('keluhanManual').value : valKeluhan;
 
-        // MENGGABUNGKAN JAWABAN DROPDOWN WAWANCARA MENJADI 1 TEKS UNTUK AI
-        const vStres = document.getElementById('waStres').value;
-        const vEmosi = document.getElementById('waEmosi').value;
-        const vTidur = document.getElementById('waTidur').value;
-        const finalWawancara = `Tingkat Stres: ${vStres} | Emosi Dominan: ${vEmosi} | Kualitas Tidur: ${vTidur}`;
-
         const payload = {
             action: "insert", 
             nrm: document.getElementById('nrmKlien').value, 
@@ -393,7 +350,7 @@
             tensi: document.getElementById('tensiKlien').value,
             keluhan: finalKeluhan,
             gejala: document.getElementById('gejalaKlien').value, 
-            wawancara: finalWawancara,
+            wawancara: document.getElementById('dataWawancara').value,
             imageBase64: imageBase64Data
         };
 
@@ -473,6 +430,8 @@
     document.getElementById('btnReset').addEventListener('click', function() {
         if(confirm("Apakah Anda yakin ingin membersihkan form untuk mendaftar pasien baru?")) {
             document.getElementById('formKlinis').reset();
+            
+            // Mengembalikan status required file input jika sebelumnya memakai webcam
             document.getElementById('fotoLidah').required = true;
             imageBase64Data = "";
             dataPasienTerakhir = {};
