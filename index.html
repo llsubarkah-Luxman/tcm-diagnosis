@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Klinik TCM - AI Iridologi</title>
+    <title>Sistem Klinik TCM - 11 Vision AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
@@ -12,15 +12,17 @@
         .form-row { display: flex; gap: 15px; margin-bottom:15px; }
         .form-col { flex: 1; }
         label { font-weight: 600; font-size: 13px; margin-bottom: 5px; display: block; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: 'Poppins'; font-size: 14px; box-sizing: border-box; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: 'Poppins'; font-size: 14px; box-sizing: border-box; }
+        input[type="file"] { width: 100%; padding: 8px; font-size: 12px; }
         button { width: 100%; padding: 14px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:disabled { background: #95a5a6; }
         .search-box { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
         .history-card { background: #fff; padding: 15px; margin-top: 10px; border-left: 4px solid #3498db; font-size: 13px; border-radius: 6px; }
-        .image-preview { width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; border: 2px dashed #bdc3c7; }
         .section-title { margin-top: 25px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #3498db; color: #2980b9; font-size: 16px; }
         #modalConfig { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
         .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        details { background:#f8f9fa; padding:12px; border-radius:8px; margin-top:10px; border:1px solid #ddd; }
+        summary { font-weight:bold; cursor:pointer; color:#2980b9; outline:none; }
     </style>
 </head>
 <body>
@@ -49,7 +51,7 @@
     </div>
 
     <form id="formKlinis">
-        <div class="section-title">👤 Profil Dasar (Statik)</div>
+        <div class="section-title">👤 Profil Dasar</div>
         <div class="form-row">
             <div class="form-col"><label>NRM:</label><input type="text" id="nrmKlien" placeholder="Kosongkan jika Baru" readonly style="background:#f1f3f5;"></div>
             <div class="form-col"><label>Nama Lengkap:</label><input type="text" id="namaKlien" required></div>
@@ -63,7 +65,7 @@
             <div class="form-col"><label>No. WhatsApp:</label><input type="number" id="noWaKlien"></div>
         </div>
 
-        <div class="section-title">🩺 Observasi Kunjungan Harian</div>
+        <div class="section-title">🩺 Observasi Kunjungan</div>
         <div class="form-row">
             <div class="form-col"><label>Tensi & Nadi:</label><input type="text" id="tensiKlien" placeholder="Contoh: 130/80/80"></div>
             <div class="form-col">
@@ -80,65 +82,81 @@
         <label>Gejala Penyerta:</label>
         <textarea id="gejalaKlien" rows="2" placeholder="Contoh: Asam urat paha lutut..." required style="margin-bottom:15px;"></textarea>
 
-        <!-- BAGIAN WAWANCARA YANG DIPERBARUI -->
         <div class="section-title">💬 Wawancara (Fokus Emosi / Shen)</div>
-        
-        <label>1. Seberapa berat beban pikiran/stres minggu ini?</label>
+        <label>1. Beban pikiran/stres minggu ini?</label>
         <select id="wawancara1" required style="margin-bottom:10px;" onchange="gabungWawancara()">
-            <option value="" disabled selected>-- Pilih Tingkat Stres --</option>
-            <option value="1 - Sangat Santai">1 - Sangat Santai</option>
-            <option value="2 - Agak Santai">2 - Agak Santai</option>
-            <option value="3 - Sedang / Biasa saja">3 - Sedang / Biasa saja</option>
-            <option value="4 - Cukup Terbebani">4 - Cukup Terbebani</option>
-            <option value="5 - Sangat Terbebani (Stres Tinggi)">5 - Sangat Terbebani (Stres Tinggi)</option>
+            <option value="" disabled selected>-- Pilih --</option>
+            <option value="Santai">Santai</option>
+            <option value="Biasa saja">Biasa saja</option>
+            <option value="Cukup Terbebani">Cukup Terbebani</option>
+            <option value="Sangat Terbebani / Stres">Sangat Terbebani / Stres</option>
         </select>
-
-        <label>2. Kondisi emosi yang paling sering dialami:</label>
+        <label>2. Kondisi emosi paling sering?</label>
         <select id="wawancara2" required style="margin-bottom:10px;" onchange="gabungWawancara()">
-            <option value="" disabled selected>-- Pilih Kondisi Emosi --</option>
-            <option value="Mudah marah / tersinggung">Mudah marah / tersinggung</option>
-            <option value="Sering sedih / murung">Sering sedih / murung</option>
+            <option value="" disabled selected>-- Pilih --</option>
+            <option value="Mudah marah">Mudah marah</option>
+            <option value="Sering sedih">Sering sedih</option>
             <option value="Memendam perasaan">Memendam perasaan</option>
-            <option value="Merasa damai / stabil">Merasa damai / stabil</option>
+            <option value="Stabil">Stabil</option>
         </select>
-
-        <label>3. Bagaimana kondisi tidur akhir-akhir ini?</label>
+        <label>3. Kondisi tidur?</label>
         <select id="wawancara3" required style="margin-bottom:15px;" onchange="gabungWawancara()">
-            <option value="" disabled selected>-- Pilih Kondisi Tidur --</option>
-            <option value="Sulit mulai tidur (Insomnia awal)">Sulit mulai tidur (Insomnia awal)</option>
-            <option value="Sering terbangun tengah malam">Sering terbangun tengah malam</option>
-            <option value="Banyak mimpi / gelisah">Banyak mimpi / gelisah</option>
-            <option value="Nyenyak & bangun segar">Nyenyak & bangun segar</option>
+            <option value="" disabled selected>-- Pilih --</option>
+            <option value="Sulit tidur">Sulit tidur (Insomnia)</option>
+            <option value="Sering terbangun">Sering terbangun</option>
+            <option value="Banyak mimpi">Banyak mimpi / gelisah</option>
+            <option value="Nyenyak">Nyenyak & bangun segar</option>
         </select>
+        <textarea id="dataWawancara" style="display:none;" required></textarea>
 
-        <!-- Textarea disembunyikan agar tetap terkirim ke Code.gs tanpa error -->
-        <textarea id="dataWawancara" style="display:none;"></textarea>
-        <!-- ================================== -->
+        <div class="section-title">📸 Modul Visi AI (Hingga 11 Foto)</div>
+        
+        <label>1. Foto Lidah (Wajib):</label>
+        <input type="file" id="fotoLidah" accept="image/*" required>
 
-        <div class="section-title">📸 Modul Mata AI (Computer Vision)</div>
-        <div class="form-row">
-            <div class="form-col">
-                <label>1. Foto Lidah (Wajib):</label>
-                <input type="file" id="fotoLidah" accept="image/*" capture="environment" required>
-                <img id="previewLidah" class="image-preview">
+        <details>
+            <summary>2. Iris Mata (Kiri & Kanan)</summary>
+            <div class="form-row" style="margin-top:10px;">
+                <div class="form-col"><label>Kiri</label><input type="file" id="irisKiri" accept="image/*"></div>
+                <div class="form-col"><label>Kanan</label><input type="file" id="irisKanan" accept="image/*"></div>
             </div>
-            <div class="form-col" id="boxIris">
-                <label>2. Foto Iris Mata (Opsional):</label>
-                <input type="file" id="fotoIris" accept="image/*" capture="environment">
-                <img id="previewIris" class="image-preview">
-                <p style="font-size:11px; color:#7f8c8d; margin-top:5px;">Foto jarak dekat. Biarkan kosong jika pasien lama.</p>
-                <input type="hidden" id="riwayatIrisTxt">
-            </div>
-        </div>
+        </details>
 
-        <button type="submit" id="btnSubmit" style="margin-top:20px;">Analisis AI & Simpan ke 3 Sheet</button>
+        <details>
+            <summary>3. Sklera KIRI (4 Kuadran)</summary>
+            <div class="form-row" style="margin-top:10px;">
+                <div class="form-col"><label>Atas</label><input type="file" id="sklKiriAtas" accept="image/*"></div>
+                <div class="form-col"><label>Bawah</label><input type="file" id="sklKiriBawah" accept="image/*"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-col"><label>Dalam (Hidung)</label><input type="file" id="sklKiriDalam" accept="image/*"></div>
+                <div class="form-col"><label>Luar (Telinga)</label><input type="file" id="sklKiriLuar" accept="image/*"></div>
+            </div>
+        </details>
+
+        <details>
+            <summary>4. Sklera KANAN (4 Kuadran)</summary>
+            <div class="form-row" style="margin-top:10px;">
+                <div class="form-col"><label>Atas</label><input type="file" id="sklKananAtas" accept="image/*"></div>
+                <div class="form-col"><label>Bawah</label><input type="file" id="sklKananBawah" accept="image/*"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-col"><label>Dalam (Hidung)</label><input type="file" id="sklKananDalam" accept="image/*"></div>
+                <div class="form-col"><label>Luar (Telinga)</label><input type="file" id="sklKananLuar" accept="image/*"></div>
+            </div>
+        </details>
+
+        <button type="submit" id="btnSubmit" style="margin-top:25px;">Analisis AI & Simpan ke Arsip</button>
     </form>
 
     <div id="hasilContainer" style="display:none; margin-top:30px; border-top:2px dashed #ccc; padding-top:20px;">
         <h3 style="color:#27ae60; text-align:center;">Diagnosis Berhasil!</h3>
+        <div style="text-align:center; margin-bottom:15px;">
+            <a id="linkFolder" href="#" target="_blank" style="color:#e67e22; text-decoration:none; font-weight:bold;">📁 Buka Folder Arsip Pasien</a>
+        </div>
         <div style="background:#f9f9f9; padding:15px; border-radius:8px; border-left:4px solid #8e44ad; margin-bottom:15px;">
-            <b style="color:#8e44ad;">👁️ Analisis Iridologi AI:</b>
-            <p id="resIris" style="font-size:14px; margin-top:5px;"></p>
+            <b style="color:#8e44ad;">👁️ Analisis Mata AI:</b>
+            <p id="resMata" style="font-size:14px; margin-top:5px;"></p>
         </div>
         <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px; font-size:14px; line-height:1.6;" id="resLengkap"></div>
         <button type="button" id="btnReset" style="background:#95a5a6; margin-top: 15px;">🔄 Pasien Baru</button>
@@ -147,20 +165,39 @@
 
 <script>
     // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT TERBARU DI SINI
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwLgS0RmdtM9TwGcrC2g-EvVS-kbk1qL3RC24O7pzUc44xHOnS48fqIy0I_mIwmNxszvQ/exec"; 
+    const scriptURL = "MASUKKAN_URL_AKANG_DI_SINI"; 
     
-    let base64Lidah = ""; let base64Iris = "";
-
-    // Fungsi menggabungkan pilihan wawancara
     function gabungWawancara() {
         const w1 = document.getElementById('wawancara1').value;
         const w2 = document.getElementById('wawancara2').value;
         const w3 = document.getElementById('wawancara3').value;
-        
-        document.getElementById('dataWawancara').value = 
-            "1. Beban Pikiran: " + (w1 || "-") + "\n" +
-            "2. Kondisi Emosi: " + (w2 || "-") + "\n" +
-            "3. Kualitas Tidur: " + (w3 || "-");
+        document.getElementById('dataWawancara').value = "Beban: " + w1 + "\nEmosi: " + w2 + "\nTidur: " + w3;
+    }
+
+    // FUNGSI KOMPRESI GAMBAR (Canvas)
+    async function compressImage(fileId) {
+        return new Promise((resolve) => {
+            const fileInput = document.getElementById(fileId);
+            if (!fileInput || !fileInput.files[0]) return resolve(""); // Jika kosong
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxWidth = 800; // Ukuran aman untuk AI dan ringan dikirim
+                    const scaleSize = maxWidth / img.width;
+                    canvas.width = maxWidth;
+                    canvas.height = img.height * scaleSize;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.6)); // Kualitas 60%
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        });
     }
 
     window.onload = async function() {
@@ -176,7 +213,6 @@
         location.reload();
     });
 
-    // PENCARIAN & AUTO-FILL
     document.getElementById('btnSearch').addEventListener('click', async function() {
         const keyword = document.getElementById('inputSearch').value;
         if(!keyword) return;
@@ -190,7 +226,7 @@
             result.data.forEach(r => {
                 html += `<div class="history-card">
                             <b>[${r.nrm}] ${r.nama}</b><br>
-                            <span style="font-size:12px; color:#555;">Umur: ${r.umur} | BB: ${r.berat} Kg</span><br>
+                            <span style="font-size:12px; color:#555;">Kunjungan Terakhir: ${new Date(r.waktu).toLocaleDateString('id-ID')}</span><br>
                             <button type="button" onclick='pilihPasien(${JSON.stringify(r).replace(/'/g, "\\'")})' style="width:auto; padding:6px 12px; font-size:12px; background:#27ae60; margin-top:5px; color:#fff; border:none; border-radius:4px; cursor:pointer;">Pilih Pasien</button>
                          </div>`;
             });
@@ -205,42 +241,34 @@
         document.getElementById('umurKlien').value = data.umur;
         document.getElementById('genderKlien').value = data.gender;
         document.getElementById('beratKlien').value = data.berat;
-        document.getElementById('riwayatIrisTxt').value = data.analisisIris;
         
-        if(data.analisisIris && data.analisisIris !== "") {
-            document.getElementById('boxIris').style.opacity = "0.5";
-            document.getElementById('boxIris').title = "Foto iris genetik sudah tersimpan di database.";
-        }
+        document.getElementById('wawancara1').value = "";
+        document.getElementById('wawancara2').value = "";
+        document.getElementById('wawancara3').value = "";
+        document.getElementById('dataWawancara').value = "";
         document.getElementById('formKlinis').scrollIntoView({behavior: "smooth"});
     };
 
-    // HANDLE IMAGES
-    document.getElementById('fotoLidah').addEventListener('change', function(e) {
-        if(e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(evt) { document.getElementById('previewLidah').src = evt.target.result; document.getElementById('previewLidah').style.display = 'block'; base64Lidah = evt.target.result; }
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    });
-
-    document.getElementById('fotoIris').addEventListener('change', function(e) {
-        if(e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(evt) { document.getElementById('previewIris').src = evt.target.result; document.getElementById('previewIris').style.display = 'block'; base64Iris = evt.target.result; }
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    });
-
-    // SUBMIT DATA
     document.getElementById('formKlinis').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        // Memastikan gabungan wawancara terbentuk sebelum disubmit
         gabungWawancara();
 
         const btn = document.getElementById('btnSubmit');
-        btn.disabled = true; btn.innerText = "🧠 AI Sedang Membedah 2 Gambar...";
+        btn.disabled = true; btn.innerText = "⏳ Sedang Mengompres 11 Foto...";
         
+        // Eksekusi kompresi paralel untuk mempercepat proses
+        const [
+            imgLidah, imgIrisKiri, imgIrisKanan,
+            imgSklKiriAtas, imgSklKiriBawah, imgSklKiriDalam, imgSklKiriLuar,
+            imgSklKananAtas, imgSklKananBawah, imgSklKananDalam, imgSklKananLuar
+        ] = await Promise.all([
+            compressImage('fotoLidah'), compressImage('irisKiri'), compressImage('irisKanan'),
+            compressImage('sklKiriAtas'), compressImage('sklKiriBawah'), compressImage('sklKiriDalam'), compressImage('sklKiriLuar'),
+            compressImage('sklKananAtas'), compressImage('sklKananBawah'), compressImage('sklKananDalam'), compressImage('sklKananLuar')
+        ]);
+
+        btn.innerText = "🧠 AI Sedang Membedah Data...";
+
         const payload = {
             action: "insert", 
             nrm: document.getElementById('nrmKlien').value, 
@@ -253,9 +281,10 @@
             keluhan: document.getElementById('keluhanUtama').value,
             gejala: document.getElementById('gejalaKlien').value, 
             wawancara: document.getElementById('dataWawancara').value,
-            riwayatIris: document.getElementById('riwayatIrisTxt').value,
-            imgLidah: base64Lidah,
-            imgIris: base64Iris
+            // Memasukkan hasil kompresi (Base64)
+            imgLidah, imgIrisKiri, imgIrisKanan,
+            imgSklKiriAtas, imgSklKiriBawah, imgSklKiriDalam, imgSklKiriLuar,
+            imgSklKananAtas, imgSklKananBawah, imgSklKananDalam, imgSklKananLuar
         };
 
         try {
@@ -265,7 +294,8 @@
             if (result.status === "sukses") {
                 const rd = result.data;
                 
-                document.getElementById('resIris').innerText = rd.analisis_iris || "Menggunakan rekam data mata sebelumnya.";
+                document.getElementById('linkFolder').href = rd.folderUrl;
+                document.getElementById('resMata').innerText = rd.analisis_mata || "Hanya memproses foto Lidah.";
                 document.getElementById('resLengkap').innerHTML = `
                     <b style="color:#e74c3c; font-size:16px;">${rd.diagnosis}</b><br>
                     <i style="color:#555;">${rd.penjelasan}</i><hr style="border: 0.5px solid #eee; margin:15px 0;">
@@ -280,8 +310,8 @@
                 `;
                 document.getElementById('hasilContainer').style.display = "block"; 
             } else { alert("Gagal: " + result.pesan); }
-        } catch (e) { alert("Server Sibuk. Ulangi."); } 
-        finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan ke 3 Sheet"; }
+        } catch (e) { alert("Server Sibuk/Timeout. Coba lagi."); } 
+        finally { btn.disabled = false; btn.innerText = "Analisis AI & Simpan ke Arsip"; }
     });
 
     document.getElementById('btnReset').addEventListener('click', () => location.reload());
